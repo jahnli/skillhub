@@ -220,6 +220,7 @@ class UserProfileControllerTest {
         var principal = testPrincipal();
         var user = new UserAccount("user-1", "CurrentName", "user@example.com", "https://example.com/avatar.png");
 
+        user.updateEmployeeProfile("Example", "Research", "00123", "Engineer", "+86-123");
         given(userAccountRepository.findById("user-1")).willReturn(Optional.of(user));
         given(changeRequestRepository.findFirstByUserIdAndStatusInOrderByCreatedAtDesc(
                 "user-1",
@@ -232,6 +233,11 @@ class UserProfileControllerTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.displayName").value("CurrentName"))
                 .andExpect(jsonPath("$.data.email").value("user@example.com"))
+                .andExpect(jsonPath("$.data.company").value("Example"))
+                .andExpect(jsonPath("$.data.department").value("Research"))
+                .andExpect(jsonPath("$.data.employeeNumber").value("00123"))
+                .andExpect(jsonPath("$.data.jobTitle").value("Engineer"))
+                .andExpect(jsonPath("$.data.phone").value("+86-123"))
                 .andExpect(jsonPath("$.data.pendingChanges").isEmpty());
     }
 

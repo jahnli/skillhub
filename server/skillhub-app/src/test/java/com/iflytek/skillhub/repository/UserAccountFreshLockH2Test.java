@@ -30,11 +30,14 @@ class UserAccountFreshLockH2Test {
         UserAccount locked = users.findLockedFreshById(id).orElseThrow();
         assertThat(locked.getEmailRevision()).isZero();
         locked.setEmail("b@example.test");
+        locked.updateEmployeeProfile("Example", "Research", "00123", "Engineer", "+86-123");
         users.save(locked);
         em.flush();
         em.clear();
         UserAccount reloaded = users.findLockedFreshById(id).orElseThrow();
         assertThat(reloaded.getEmail()).isEqualTo("b@example.test");
+        assertThat(reloaded.getEmployeeNumber()).isEqualTo("00123");
+        assertThat(reloaded.getDepartment()).isEqualTo("Research");
         assertThat(reloaded.getEmailRevision()).isEqualTo(1);
     }
 }

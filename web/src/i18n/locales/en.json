@@ -1743,6 +1743,11 @@
     "nextPage": "Next"
   },
   "profile": {
+    "company": "Company",
+    "department": "Department",
+    "employeeNumber": "Employee number",
+    "jobTitle": "Job title",
+    "phone": "Phone number",
     "title": "Profile Settings",
     "subtitle": "Manage your display name and personal information.",
     "displayName": "Display Name",

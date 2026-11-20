@@ -285,7 +285,7 @@ class SystemAuthSettingsPostgresTest {
         return new IdentityBindingService(identities, users, userRoles,
                 mock(GlobalNamespaceMembershipService.class), mock(ApplicationEventPublisher.class),
                 transactionManager, new InitialExternalRoleGrantService(
-                        rules, userRoles, new AuditLogService(auditLogs, Clock.systemUTC())));
+                        rules, userRoles, new AuditLogService(auditLogs, Clock.systemUTC())), "casdoor");
     }
 
     private static PlatformPrincipal firstLogin(IdentityBindingService service, OAuthClaims claims,

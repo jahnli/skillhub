@@ -48,10 +48,12 @@ export function ProfileSettingsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const profileQueryKey = ['profile', user?.userId] as const
   const { data: profileData } = useQuery({
-    queryKey: ['profile'],
+    queryKey: profileQueryKey,
     queryFn: () => profileApi.getProfile(),
-    staleTime: 30_000,
+    enabled: Boolean(user?.userId),
+    staleTime: 0,
   })
 
   const pendingChanges = profileData?.pendingChanges
@@ -131,7 +133,7 @@ export function ProfileSettingsPage() {
       const result = await profileApi.updateProfile(changes)
 
       if (result.status === 'PENDING_REVIEW') {
-        queryClient.setQueryData(['profile'], (current: typeof profileData) => {
+        queryClient.setQueryData(profileQueryKey, (current: typeof profileData) => {
           if (!current) return current
           return {
             ...current,
@@ -143,16 +145,16 @@ export function ProfileSettingsPage() {
             },
           }
         })
-        await queryClient.invalidateQueries({ queryKey: ['profile'] })
+        await queryClient.invalidateQueries({ queryKey: profileQueryKey })
         toast.success(t('profile.pendingReviewTitle'), t('profile.pendingReviewDescription'))
       } else if (result.status === 'PARTIALLY_APPLIED') {
         await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
-        await queryClient.invalidateQueries({ queryKey: ['profile'] })
+        await queryClient.invalidateQueries({ queryKey: profileQueryKey })
         toast.success(t('profile.partiallyAppliedTitle'), t('profile.partiallyAppliedDescription'))
       } else {
         toast.success(t('profile.successTitle'), t('profile.successDescription'))
         await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
-        await queryClient.invalidateQueries({ queryKey: ['profile'] })
+        await queryClient.invalidateQueries({ queryKey: profileQueryKey })
       }
 
       setIsEditing(false)
@@ -211,6 +213,16 @@ export function ProfileSettingsPage() {
             <label className="text-sm font-medium">{t('profile.userId')}</label>
             <p className="text-sm text-muted-foreground">{user?.userId || '-'}</p>
           </div>
+
+          {(['company', 'department', 'employeeNumber', 'jobTitle', 'phone'] as const).map((field) => {
+            const value = profileData?.[field]
+            return value ? (
+              <dl key={field} className="space-y-2">
+                <dt className="text-sm font-medium">{t(`profile.${field}`)}</dt>
+                <dd className="text-sm text-muted-foreground">{value}</dd>
+              </dl>
+            ) : null
+          })}
 
           <form data-analytics-id="account.profile.save" className="max-w-3xl space-y-4" onSubmit={handleSubmit}>
             {/* Dynamic fields */}
