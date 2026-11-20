@@ -35,6 +35,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /** Casdoor browser logout and shared revocation of Casdoor-authenticated web sessions. */
@@ -61,12 +62,11 @@ public class CasdoorSessionLogout {
     private final JwtDecoder decoder;
     private final String keyPrefix;
     private final Duration markerLifetime;
-    private final String postLogoutRedirectUri;
+    private final RequestMatcher browserCallback;
 
     public CasdoorSessionLogout(ClientRegistrationRepository registrations, StringRedisTemplate redis, CasdoorRegistration casdoor,
             @Value("${spring.session.redis.namespace:skillhub:session}") String sessionNamespace,
-            @Value("${spring.session.timeout:${server.servlet.session.timeout:8h}}") String sessionTimeout,
-            @Value("${skillhub.auth.casdoor.post-logout-redirect-uri:}") String postLogoutRedirectUri) {
+            @Value("${spring.session.timeout:${server.servlet.session.timeout:8h}}") String sessionTimeout) {
         this.redis = redis;
         this.registration = casdoor.id().isBlank() ? null : registrations.findByRegistrationId(casdoor.id());
         this.decoder = registration == null ? null : createDecoder(registration);
@@ -75,7 +75,8 @@ public class CasdoorSessionLogout {
                 + encodeKey(registration.getClientId()) + "}:";
         // A session sees the marker on its next request, or expires from inactivity first.
         this.markerLifetime = DurationStyle.detectAndParse(sessionTimeout).plus(TOKEN_MAX_AGE).plus(CLOCK_SKEW);
-        this.postLogoutRedirectUri = postLogoutRedirectUri;
+        this.browserCallback = registration == null ? request -> false : new AntPathRequestMatcher(
+                "/login/oauth2/code/" + registration.getRegistrationId(), "GET");
     }
 
     static void rememberToken(HttpServletRequest request, OidcIdToken token) {
@@ -91,21 +92,35 @@ public class CasdoorSessionLogout {
             return;
         }
         var session = request.getSession(false);
-        if (session == null || !(session.getAttribute(SESSION_TOKEN) instanceof OidcIdToken token)
-                || !matchesRegistration(token.getClaimAsString("iss"), token.getAudience())) {
-            return;
-        }
+        Object savedToken = session == null ? null : session.getAttribute(SESSION_TOKEN);
         Object endpoint = registration.getProviderDetails().getConfigurationMetadata().get("end_session_endpoint");
         if (!(endpoint instanceof String url) || !StringUtils.hasText(url)) {
             return;
         }
-        var builder = UriComponentsBuilder.fromUriString(url)
-                .queryParam("id_token_hint", "{hint}");
-        if (StringUtils.hasText(postLogoutRedirectUri)) {
-            builder.queryParam("post_logout_redirect_uri", "{returnUri}");
+        var builder = UriComponentsBuilder.fromUriString(url);
+        var parameters = new java.util.HashMap<String, String>();
+        if (savedToken instanceof OidcIdToken token) {
+            if (!matchesRegistration(token.getClaimAsString("iss"), token.getAudience())) {
+                return;
+            }
+            builder.queryParam("id_token_hint", "{hint}");
+            parameters.put("hint", token.getTokenValue());
+        } else {
+            // Sessions created before ID tokens were retained can still end the browser's SSO session.
+            builder.queryParam("client_id", "{client}");
+            parameters.put("client", registration.getClientId());
         }
-        request.setAttribute(BROWSER_REDIRECT, builder.encode().buildAndExpand(Map.of(
-                "hint", token.getTokenValue(), "returnUri", postLogoutRedirectUri)).toUriString());
+        builder.queryParam("post_logout_redirect_uri", "{returnUri}");
+        parameters.put("returnUri", loginRedirectUri(request));
+        request.setAttribute(BROWSER_REDIRECT, builder.encode().buildAndExpand(parameters).toUriString());
+    }
+
+    private String loginRedirectUri(HttpServletRequest request) {
+        var base = ServletUriComponentsBuilder.fromContextPath(request).build();
+        return UriComponentsBuilder.fromUriString(registration.getRedirectUri()).buildAndExpand(Map.of(
+                "registrationId", registration.getRegistrationId(), "action", "login",
+                "baseUrl", base.toUriString(), "baseScheme", base.getScheme(), "baseHost", base.getHost(),
+                "basePort", base.getPort() < 0 ? "" : ":" + base.getPort(), "basePath", base.getPath())).toUriString();
     }
 
     public OncePerRequestFilter filter() {
@@ -113,6 +128,13 @@ public class CasdoorSessionLogout {
             @Override
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain) throws ServletException, IOException {
+                // Casdoor returns to the same callback without an authorization response after logout.
+                if (browserCallback.matches(request) && request.getParameter("code") == null
+                        && request.getParameter("error") == null && !StringUtils.hasLength(request.getParameter("state"))) {
+                    response.setStatus(HttpServletResponse.SC_FOUND);
+                    response.setHeader("Location", request.getContextPath() + "/?signedOut=1");
+                    return;
+                }
                 if (BACK_CHANNEL.matches(request)) {
                     receiveLogout(request, response);
                     return;

@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.auth.config;
 
+import com.iflytek.skillhub.auth.oauth.CasdoorSessionLogout;
 import com.iflytek.skillhub.auth.oauth.CustomOAuth2UserService;
 import com.iflytek.skillhub.auth.oauth.CustomOidcUserService;
 import com.iflytek.skillhub.auth.oauth.DispatchingTokenResponseClient;
@@ -32,6 +33,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
@@ -115,7 +117,7 @@ public class SecurityConfig {
      * CSRF rules for browser traffic, and method-level authorization.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CasdoorSessionLogout casdoorLogout) throws Exception {
         var csrfHandler = new CsrfTokenRequestAttributeHandler();
         csrfHandler.setCsrfRequestAttributeName(null);
         RequestMatcher csrfIgnoreMatcher = request -> {
@@ -128,7 +130,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(csrfHandler)
-                .ignoringRequestMatchers(csrfIgnoreMatcher)
+                .ignoringRequestMatchers(csrfIgnoreMatcher, CasdoorSessionLogout.BACK_CHANNEL)
             )
             .authorizeHttpRequests(auth -> {
                 configureRoutePolicies(auth);
@@ -169,10 +171,19 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/api/v1/auth/logout")
+                .addLogoutHandler((request, response, authentication) -> casdoorLogout.prepareBrowserLogout(request, authentication))
                 // Redirect to the deployment root honoring any sub-path prefix (X-Forwarded-Prefix
                 // is reflected into the context path), so logout does not escape a sub-path deployment.
                 .logoutSuccessHandler((request, response, authentication) -> {
                     String contextPath = request.getContextPath();
+                    if ("true".equals(request.getParameter("federated"))) {
+                        Object redirect = request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT);
+                        if (redirect instanceof String url) {
+                            response.setHeader("X-SkillHub-Logout-Url", url);
+                        }
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                        return;
+                    }
                     response.sendRedirect(((contextPath == null) ? "" : contextPath) + "/");
                 })
                 .invalidateHttpSession(true)
@@ -180,6 +191,7 @@ public class SecurityConfig {
             )
             .addFilterBefore(new ExpiredPublicSessionFilter(
                     routeSecurityPolicyRegistry, corruptSessionRemover, sessionCookieName), CsrfFilter.class)
+            .addFilterBefore(casdoorLogout.filter(), LogoutFilter.class)
             .addFilterBefore(apiTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(apiTokenScopeFilter, ApiTokenAuthenticationFilter.class);
 

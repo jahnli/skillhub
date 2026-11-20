@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
+import { pauseCasdoorSignIn } from '@/features/auth/casdoor-session'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
 import { canAccessGlobalReviewCenter } from '@/features/review/review-paths'
 import { withBasePath } from '@/shared/lib/base-path'
+import { handleApiError } from '@/shared/lib/api-error'
 import { cn } from '@/shared/lib/utils'
 
 interface User {
@@ -26,6 +28,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
   const queryClient = useQueryClient()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const closeTimerRef = useRef<number | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [isClickOpen, setIsClickOpen] = useState(false)
 
@@ -77,16 +80,20 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
   }, [])
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
+    let redirectTo = withBasePath('/')
     try {
-      await authApi.logout()
+      redirectTo = await authApi.logoutWithProvider() ?? redirectTo
+      pauseCasdoorSignIn()
     } catch (error) {
       console.error('Logout failed:', error)
-    } finally {
-      // Always clear cache and redirect, even if API call fails
-      clearSessionScopedQueries(queryClient)
-      queryClient.setQueryData(['auth', 'me'], null)
-      window.location.href = withBasePath('/')
+      setIsLoggingOut(false)
+      handleApiError(error)
+      return
     }
+    clearSessionScopedQueries(queryClient)
+    queryClient.setQueryData(['auth', 'me'], null)
+    window.location.href = redirectTo
   }
 
   const closeMenu = () => {
@@ -200,6 +207,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
             <div className="-mx-1 my-1 h-px bg-muted" />
             <button data-analytics-id="auth.logout.request"
               type="button"
+              disabled={isLoggingOut}
               onClick={handleLogout}
               className={cn(menuItemClassName, 'text-destructive')}
             >

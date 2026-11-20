@@ -5,7 +5,10 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { UserMenu } from './user-menu'
 import { NotificationBell } from '@/features/notification/notification-bell'
 
-vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }))
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...await importOriginal<typeof import('react-i18next')>(),
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
 vi.mock('@/api/client', () => ({ authApi: { logout: vi.fn() } }))
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({}) }))
 vi.mock('@tanstack/react-router', () => ({ Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => <a href={to} {...props}>{children}</a> }))

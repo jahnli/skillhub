@@ -36,6 +36,7 @@ vi.mock('@/shared/lib/api-error', () => ({
 
 import {
   WEB_API_PREFIX,
+  authApi,
   buildApiUrl,
   fetchText,
   getAppBaseUrl,
@@ -106,6 +107,21 @@ describe('buildApiUrl', () => {
     window.__SKILLHUB_RUNTIME_CONFIG__ = { apiBaseUrl: '/skill_hub' }
     const url = buildApiUrl('/api/v1/auth/me')
     expect(url).toBe('/skill_hub/api/v1/auth/me')
+  })
+})
+
+describe('federated logout', () => {
+  it.each(['https://sso.example.com/api/logout', null])('uses the logout destination returned by the server (%s)', async (destination) => {
+    vi.stubGlobal('document', { cookie: 'XSRF-TOKEN=test-token' })
+    const headers = destination ? { 'X-SkillHub-Logout-Url': destination } : undefined
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204, headers }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await authApi.logoutWithProvider()).toBe(destination)
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/v1/auth/logout?federated=true')
+    expect(options?.method).toBe('POST')
+    expect(new Headers(options?.headers).get('X-XSRF-TOKEN')).toBe('test-token')
   })
 })
 

@@ -58,7 +58,7 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@/api/client', () => ({
   authApi: {
-    logout: vi.fn(),
+    logoutWithProvider: vi.fn(),
   },
 }))
 

@@ -12046,6 +12046,7 @@ export interface components {
             id?: string;
             name?: string;
             authorizationUrl?: string;
+            silentSignIn?: boolean;
         };
         ApiResponseListAuthMethodResponse: {
             /** Format: int32 */

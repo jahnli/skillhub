@@ -11,7 +11,7 @@ import type { User } from '@/api/types'
 export function getAuthQueryOptions(enabled = true) {
   return {
     queryKey: ['auth', 'me'] as const,
-    queryFn: authApi.getMe,
+    queryFn: () => authApi.getMe(),
     retry: false,
     enabled,
     staleTime: 0,

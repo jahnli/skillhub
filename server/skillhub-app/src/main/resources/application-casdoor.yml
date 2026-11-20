@@ -14,8 +14,3 @@ spring:
         provider:
           casdoor:
             issuer-uri: ${OAUTH2_CASDOOR_ISSUER_URI}
-
-skillhub:
-  auth:
-    casdoor:
-      post-logout-redirect-uri: ${OAUTH2_CASDOOR_POST_LOGOUT_REDIRECT_URI:}

@@ -37,7 +37,7 @@ class OAuth2AuthorizationRequestResolverTest {
         );
         resolver = new SkillHubOAuth2AuthorizationRequestResolver(
                 new InMemoryClientRegistrationRepository(github),
-                oauthLoginFlowService
+                oauthLoginFlowService, java.util.List.of(), new CasdoorRegistration("oidc")
         );
     }
 
@@ -145,7 +145,7 @@ class OAuth2AuthorizationRequestResolverTest {
         return new SkillHubOAuth2AuthorizationRequestResolver(
                 new InMemoryClientRegistrationRepository(registration),
                 flowService,
-                java.util.List.of(customizer)
+                java.util.List.of(customizer), new CasdoorRegistration("oidc")
         );
     }
 

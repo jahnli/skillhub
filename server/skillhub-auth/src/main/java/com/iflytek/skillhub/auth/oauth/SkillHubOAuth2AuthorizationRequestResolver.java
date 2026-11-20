@@ -5,14 +5,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * OAuth2 authorization request resolver that preserves a sanitized post-login redirect target in
@@ -24,19 +25,18 @@ public class SkillHubOAuth2AuthorizationRequestResolver
 
     private static final Logger log = LoggerFactory.getLogger(SkillHubOAuth2AuthorizationRequestResolver.class);
 
+    static final String SILENT_STATE = SkillHubOAuth2AuthorizationRequestResolver.class.getName() + ".silentState";
+
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
     private final OAuthLoginFlowService oauthLoginFlowService;
 
-    SkillHubOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository,
-                                               OAuthLoginFlowService oauthLoginFlowService) {
-        this(clientRegistrationRepository, oauthLoginFlowService, List.of());
-    }
+    private final CasdoorRegistration casdoor;
 
-    @Autowired
     public SkillHubOAuth2AuthorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository,
             OAuthLoginFlowService oauthLoginFlowService,
-            List<ProviderAuthorizationRequestCustomizer> customizers) {
+            List<ProviderAuthorizationRequestCustomizer> customizers, CasdoorRegistration casdoor) {
+        this.casdoor = casdoor;
         this.delegate = new DefaultOAuth2AuthorizationRequestResolver(
                 clientRegistrationRepository,
                 "/oauth2/authorization"
@@ -53,6 +53,9 @@ public class SkillHubOAuth2AuthorizationRequestResolver
             OAuth2AuthorizationRequest probe = builder.build();
             String registrationId = probe.getAttribute(OAuth2ParameterNames.REGISTRATION_ID);
             ProviderAuthorizationRequestCustomizer customizer = byProvider.get(registrationId);
+            if (casdoor.matches(registrationId)) {
+                OAuth2AuthorizationRequestCustomizers.withPkce().accept(builder);
+            }
             if (customizer != null) {
                 customizer.customize(builder);
             }
@@ -80,6 +83,20 @@ public class SkillHubOAuth2AuthorizationRequestResolver
             HttpServletRequest request, OAuth2AuthorizationRequest authorizationRequest) {
         if (authorizationRequest != null) {
             oauthLoginFlowService.rememberReturnTo(request);
+            var session = request.getSession(false);
+            if (session != null) {
+                session.removeAttribute(SILENT_STATE);
+            }
+            if (casdoor.matches(authorizationRequest.getAttribute(OAuth2ParameterNames.REGISTRATION_ID))
+                    && "true".equals(request.getParameter("silent"))) {
+                request.getSession().setAttribute(SILENT_STATE, authorizationRequest.getState());
+                authorizationRequest = OAuth2AuthorizationRequest.from(authorizationRequest)
+                        .additionalParameters(parameters -> parameters.put("prompt", "none"))
+                        .authorizationRequestUri(UriComponentsBuilder
+                                .fromUriString(authorizationRequest.getAuthorizationRequestUri())
+                                .queryParam("prompt", "none").build(true).toUriString())
+                        .build();
+            }
             log.info("OAuth authorization started: provider={}, redirectUri={}, returnToPresent={}",
                     authorizationRequest.getAttribute("registration_id"),
                     authorizationRequest.getRedirectUri(),

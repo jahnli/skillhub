@@ -50,7 +50,7 @@ class CasdoorSessionLogoutTest {
     private static final Instant NOW = Instant.now();
 
     private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
-    private final ClientRegistration registration = ClientRegistration.withRegistrationId("casdoor")
+    private final ClientRegistration registration = ClientRegistration.withRegistrationId("oidc")
             .clientId(CLIENT)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
@@ -62,8 +62,7 @@ class CasdoorSessionLogoutTest {
             .providerConfigurationMetadata(Map.of("end_session_endpoint", ISSUER + "/api/logout"))
             .build();
     private final InMemoryClientRegistrationRepository registrations = new InMemoryClientRegistrationRepository(registration);
-    private final CasdoorSessionLogout logout = new CasdoorSessionLogout(registrations, redis, new CasdoorRegistration("casdoor"), "test:session", "8h",
-            "https://skills.example.com/skillhub/?signedOut=1");
+    private final CasdoorSessionLogout logout = new CasdoorSessionLogout(registrations, redis, new CasdoorRegistration("oidc"), "test:session", "8h");
 
     @AfterEach
     void clearContext() {
@@ -72,9 +71,9 @@ class CasdoorSessionLogoutTest {
 
     @Test
     void silentAuthorizationAddsPromptAndPkceAndBindsState() {
-        var resolver = new SkillHubOAuth2AuthorizationRequestResolver(registrations, mock(OAuthLoginFlowService.class));
-        var request = new MockHttpServletRequest("GET", "/oauth2/authorization/casdoor");
-        request.setServletPath("/oauth2/authorization/casdoor");
+        var resolver = new SkillHubOAuth2AuthorizationRequestResolver(registrations, mock(OAuthLoginFlowService.class), List.of(), new CasdoorRegistration("oidc"));
+        var request = new MockHttpServletRequest("GET", "/oauth2/authorization/oidc");
+        request.setServletPath("/oauth2/authorization/oidc");
         request.addParameter("silent", "true");
 
         var authorization = resolver.resolve(request);
@@ -96,14 +95,64 @@ class CasdoorSessionLogoutTest {
     @Test
     void browserLogoutBuildsCasdoorRedirectBeforeSessionInvalidation() {
         var request = new MockHttpServletRequest();
-        var authentication = authenticate(request, "casdoor", NOW);
+        request.setServerPort(3000);
+        request.setContextPath("/skills");
+        var authentication = authenticate(request, "oidc", NOW);
         request.addParameter("federated", "true");
 
         logout.prepareBrowserLogout(request, authentication);
 
         assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).asString()
                 .startsWith(ISSUER + "/api/logout?id_token_hint=id-token")
-                .contains("post_logout_redirect_uri=https%3A%2F%2Fskills.example.com%2Fskillhub%2F%3FsignedOut%3D1");
+                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fskills%2Flogin%2Foauth2%2Fcode%2Foidc");
+    }
+
+    @Test
+    void logoutUsesTheConfiguredHttpCallbackEvenWhenTheBackendRunsOnAnotherPort() {
+        var client = ClientRegistration.withClientRegistration(registration)
+                .redirectUri("http://localhost:3000/login/oauth2/code/{registrationId}").build();
+        var handler = new CasdoorSessionLogout(new InMemoryClientRegistrationRepository(client), redis,
+                new CasdoorRegistration("oidc"), "test:session", "8h");
+        var request = new MockHttpServletRequest("POST", "/api/v1/auth/logout");
+        request.setServerPort(8080);
+        request.addParameter("federated", "true");
+        handler.prepareBrowserLogout(request, authenticate(request, "oidc", NOW));
+        assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).asString()
+                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Flogin%2Foauth2%2Fcode%2Foidc");
+    }
+
+    @Test
+    void callbackAfterLogoutReturnsToHomeWhileAuthorizationResponsesContinueToSpring() throws Exception {
+        var request = new MockHttpServletRequest("GET", "/skills/login/oauth2/code/oidc");
+        request.setContextPath("/skills");
+        request.setServletPath("/login/oauth2/code/oidc");
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+        logout.filter().doFilter(request, response, chain);
+        assertThat(response.getRedirectedUrl()).isEqualTo("/skills/?signedOut=1");
+        assertThat(chain.getRequest()).isNull();
+        for (var parameter : List.of("code", "state", "error")) {
+            request.addParameter(parameter, "value");
+            var loginChain = new MockFilterChain();
+            logout.filter().doFilter(request, new MockHttpServletResponse(), loginChain);
+            assertThat(loginChain.getRequest()).isSameAs(request);
+            request.removeParameter(parameter);
+        }
+    }
+
+    @Test
+    void legacyCasdoorSessionUsesBrowserLogoutWhileLocalLoginStaysLocal() {
+        var request = new MockHttpServletRequest();
+        request.addParameter("federated", "true");
+        var local = authenticate(request, "local", NOW);
+        logout.prepareBrowserLogout(request, local);
+        assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).isNull();
+
+        var enterprise = authenticate(request, "oidc", NOW);
+        request.getSession().removeAttribute(CasdoorSessionLogout.SESSION_TOKEN);
+        logout.prepareBrowserLogout(request, enterprise);
+        assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).asString()
+                .startsWith(ISSUER + "/api/logout?client_id=" + CLIENT);
     }
 
     @Test
@@ -136,8 +185,8 @@ class CasdoorSessionLogoutTest {
         try {
             var casdoor = ClientRegistration.withClientRegistration(registration)
                     .jwkSetUri("http://127.0.0.1:" + server.getAddress().getPort() + "/jwks").build();
-            var receiver = new CasdoorSessionLogout(new InMemoryClientRegistrationRepository(casdoor), redis, new CasdoorRegistration("casdoor"),
-                    "test:session", "8h", "https://skills.example.com/skills/?signedOut=1");
+            var receiver = new CasdoorSessionLogout(new InMemoryClientRegistrationRepository(casdoor), redis, new CasdoorRegistration("oidc"),
+                    "test:session", "8h");
             var notice = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256)
                     .keyID("casdoor").type(new JOSEObjectType("logout+jwt")).build(), new JWTClaimsSet.Builder()
                     .issuer(ISSUER).audience(CLIENT).subject("user").jwtID("logout-id").issueTime(Date.from(NOW))
@@ -168,14 +217,14 @@ class CasdoorSessionLogoutTest {
         when(values.multiGet(anyList())).thenReturn(Arrays.asList(null, Long.toString(NOW.getEpochSecond())));
 
         var oldRequest = new MockHttpServletRequest();
-        authenticate(oldRequest, "casdoor", NOW.minusSeconds(5));
+        authenticate(oldRequest, "oidc", NOW.minusSeconds(5));
         var oldSession = (MockHttpSession) oldRequest.getSession(false);
         logout.filter().doFilter(oldRequest, new MockHttpServletResponse(), new MockFilterChain());
         assertThat(oldSession.isInvalid()).isTrue();
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
 
         var newRequest = new MockHttpServletRequest();
-        authenticate(newRequest, "casdoor", NOW.plusSeconds(1));
+        authenticate(newRequest, "oidc", NOW.plusSeconds(1));
         logout.filter().doFilter(newRequest, new MockHttpServletResponse(), new MockFilterChain());
         assertThat(newRequest.getSession(false)).isNotNull();
 

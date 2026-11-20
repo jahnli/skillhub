@@ -27,6 +27,17 @@ This starts:
 
 SkillHub now pins a shared Docker Compose project name for local development, so multiple git worktrees can reuse the same dependency containers instead of fighting over `5432`, `6379`, and `9000`.
 
+### Casdoor with an HTTP localhost callback
+
+For a Casdoor deployment that upgrades HTTP callback redirects to HTTPS, put the following values in `web/.env.development.local`. Use the Casdoor registration ID and issuer origin configured for your backend.
+
+```properties
+SKILLHUB_DEV_CASDOOR_REGISTRATION_ID=oidc
+SKILLHUB_DEV_CASDOOR_ISSUER=https://casdoor.example.com
+```
+
+Open the app through the HTTP Vite port. The dev proxy requests a form response for that provider and converts the callback POST to a same-origin GET so Spring can validate the original session. Keep the same HTTP callback URI registered with Casdoor.
+
 ### Backend restarts
 
 **Frontend:** Vite HMR is enabled by default. Save a file and the browser updates instantly.

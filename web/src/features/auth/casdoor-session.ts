@@ -3,9 +3,15 @@ import { toRouterPath, withBasePath } from '@/shared/lib/base-path'
 
 const skipKey = 'skillhub:casdoor:skip-once:' + withBasePath('/')
 
-export function skipCasdoorSignInOnce() {
+const cooldownMs = 5 * 60_000
+
+function rememberCasdoorCheck() {
+  window.sessionStorage.setItem(skipKey, String(Date.now() + cooldownMs))
+}
+
+export function pauseCasdoorSignIn() {
   try {
-    window.sessionStorage.setItem(skipKey, String(Date.now() + 5 * 60_000))
+    rememberCasdoorCheck()
   } catch {
     // Automatic sign-in is skipped when storage is unavailable.
   }
@@ -16,9 +22,8 @@ export async function getCasdoorSignInUrl(): Promise<string | undefined> {
   const route = toRouterPath(pathname)
   try {
     const skipUntil = Number(window.sessionStorage.getItem(skipKey))
-    window.sessionStorage.removeItem(skipKey)
     if (skipUntil > Date.now() || new URLSearchParams(search).has('signedOut')) return
-    if (/^\/(?:device|cli|register|reset-password)(?:\/|$)/.test(route)) return
+    if (/^\/(?:oauth2|login|device|cli|register|reset-password|pending-approval|access-denied)(?:\/|$)/.test(route)) return
     const options = { timeoutMs: 2_000 }
     const providers = await authApi.getProviders(undefined, options)
     const casdoor = providers.find(({ silentSignIn }) => silentSignIn)
@@ -26,7 +31,7 @@ export async function getCasdoorSignInUrl(): Promise<string | undefined> {
 
     const returnTo = toRouterPath(pathname, search, hash)
 
-    window.sessionStorage.setItem(skipKey, String(Date.now() + 5 * 60_000))
+    rememberCasdoorCheck()
     const params = new URLSearchParams({ silent: 'true', returnTo })
     return withBasePath(casdoor.authorizationUrl + '?' + params)
   } catch {

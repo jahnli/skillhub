@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -29,8 +30,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final PlatformSessionService platformSessionService;
     private final OAuthLoginFlowService oauthLoginFlowService;
 
+    private final CasdoorRegistration casdoor;
+
     public OAuth2LoginSuccessHandler(PlatformSessionService platformSessionService,
-                                     OAuthLoginFlowService oauthLoginFlowService) {
+                                     OAuthLoginFlowService oauthLoginFlowService, CasdoorRegistration casdoor) {
+        this.casdoor = casdoor;
         this.platformSessionService = platformSessionService;
         this.oauthLoginFlowService = oauthLoginFlowService;
         setDefaultTargetUrl(OAuthLoginRedirectSupport.DEFAULT_TARGET_URL);
@@ -43,6 +47,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             PlatformPrincipal principal = (PlatformPrincipal) oAuth2User.getAttributes().get("platformPrincipal");
             if (principal != null) {
                 platformSessionService.attachToAuthenticatedSession(principal, authentication, request);
+                var session = request.getSession(false);
+                session.removeAttribute(SkillHubOAuth2AuthorizationRequestResolver.SILENT_STATE);
+                session.removeAttribute(CasdoorSessionLogout.SESSION_TOKEN);
+                if (casdoor.matches(principal.oauthProvider()) && oAuth2User instanceof OidcUser oidcUser) {
+                    CasdoorSessionLogout.rememberToken(request, oidcUser.getIdToken());
+                }
             }
         }
         String returnTo = oauthLoginFlowService.consumeReturnTo(request.getSession(false));
