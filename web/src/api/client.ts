@@ -1936,7 +1936,8 @@ export const meApi = {
 }
 
 export const profileApi = {
-  async getProfile(): Promise<{
+  async getProfile(): Promise<Pick<components['schemas']['UserProfileResponse'],
+    'company' | 'department' | 'employeeNumber' | 'jobTitle' | 'phone'> & {
     displayName: string
     avatarUrl: string | null
     email: string | null

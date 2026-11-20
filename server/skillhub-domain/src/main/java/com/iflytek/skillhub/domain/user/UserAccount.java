@@ -23,6 +23,21 @@ public class UserAccount {
     @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
 
+    @Column(name = "employee_company", columnDefinition = "text")
+    private String company;
+
+    @Column(name = "employee_department", columnDefinition = "text")
+    private String department;
+
+    @Column(name = "employee_number", columnDefinition = "text")
+    private String employeeNumber;
+
+    @Column(name = "employee_job_title", columnDefinition = "text")
+    private String jobTitle;
+
+    @Column(name = "employee_phone", columnDefinition = "text")
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private UserStatus status = UserStatus.ACTIVE;
@@ -83,6 +98,20 @@ public class UserAccount {
     }
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getCompany() { return company; }
+    public String getDepartment() { return department; }
+    public String getEmployeeNumber() { return employeeNumber; }
+    public String getJobTitle() { return jobTitle; }
+    public String getPhone() { return phone; }
+    public void updateEmployeeProfile(String company, String department, String employeeNumber,
+                                      String jobTitle, String phone) {
+        if (company != null) this.company = company;
+        if (department != null) this.department = department;
+        if (employeeNumber != null) this.employeeNumber = employeeNumber;
+        if (jobTitle != null) this.jobTitle = jobTitle;
+        if (phone != null) this.phone = phone;
+    }
+
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
     public String getMergedToUserId() { return mergedToUserId; }

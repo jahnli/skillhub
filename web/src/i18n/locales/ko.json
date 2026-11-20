@@ -1732,6 +1732,11 @@
     "nextPage": "다음"
   },
   "profile": {
+    "company": "회사",
+    "department": "부서",
+    "employeeNumber": "사번",
+    "jobTitle": "직책",
+    "phone": "휴대전화 번호",
     "title": "프로필 설정",
     "subtitle": "표시 이름과 개인 정보를 관리하세요.",
     "displayName": "표시 이름",
