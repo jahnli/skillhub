@@ -16,11 +16,12 @@ export async function getCasdoorSignInUrl(): Promise<string | undefined> {
     }
     if (/^\/(?:oauth2|login|device|cli|register|reset-password|pending-approval|access-denied)(?:\/|$)/.test(route)) return
     const options = { timeoutMs: 2_000 }
+    const user = await authApi.getMe(options)
+    if (user) return
+
     const providers = await authApi.getProviders(undefined, options)
     const casdoor = providers.find(({ silentSignIn }) => silentSignIn)
     if (!casdoor) return
-    const user = await authApi.getMe(options)
-    if (user && user.oauthProvider !== casdoor.id) return
 
     page.searchParams.set(checkComplete, '1')
     const returnTo = toRouterPath(page.pathname, page.search, page.hash)

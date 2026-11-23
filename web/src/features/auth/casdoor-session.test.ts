@@ -34,22 +34,19 @@ describe('Casdoor entry', () => {
     vi.unstubAllGlobals()
   })
 
-  it.each([null, { userId: 'employee', platformRoles: [], displayName: 'Employee', oauthProvider: 'oidc' }])(
-    'checks on every reload, consuming the return marker once', async (user) => {
-      vi.mocked(authApi.getMe).mockResolvedValue(user)
-      const originalPage = window.location.href
-      for (let reload = 0; reload < 2; reload++) {
-        const href = await getCasdoorSignInUrl()
-        const entry = new URL(href!, originalPage)
-        expect(entry.pathname).toBe('/skills/oauth2/authorization/oidc')
-        expect(entry.searchParams.get('silent')).toBe('true')
-        window.location.href = window.location.origin + '/skills' + entry.searchParams.get('returnTo')
-        expect(await getCasdoorSignInUrl()).toBeUndefined()
-        expect(window.location.href).toBe(originalPage)
-      }
-      expect(authApi.getMe).toHaveBeenCalledTimes(2)
-    },
-  )
+  it('checks anonymous sessions on each reload and consumes the return marker once', async () => {
+    const originalPage = window.location.href
+    for (let reload = 0; reload < 2; reload++) {
+      const href = await getCasdoorSignInUrl()
+      const entry = new URL(href!, originalPage)
+      expect(entry.pathname).toBe('/skills/oauth2/authorization/oidc')
+      expect(entry.searchParams.get('silent')).toBe('true')
+      window.location.href = window.location.origin + '/skills' + entry.searchParams.get('returnTo')
+      expect(await getCasdoorSignInUrl()).toBeUndefined()
+      expect(window.location.href).toBe(originalPage)
+    }
+    expect(authApi.getMe).toHaveBeenCalledTimes(2)
+  })
 
   it('resumes checks on the next reload after explicit logout', async () => {
     window.location.search = '?signedOut=1&tab=files'
@@ -69,14 +66,21 @@ describe('Casdoor entry', () => {
     expect(authApi.getProviders).not.toHaveBeenCalled()
   })
 
-  it.each(['local', 'github', undefined])('preserves an existing %s session', async (oauthProvider) => {
+  it.each(['oidc', 'local', 'github', undefined])('preserves an existing %s session', async (oauthProvider) => {
     vi.mocked(authApi.getMe).mockResolvedValue({ userId: 'employee', displayName: 'Employee', platformRoles: [], oauthProvider })
     expect(await getCasdoorSignInUrl()).toBeUndefined()
+    expect(authApi.getProviders).not.toHaveBeenCalled()
+  })
+
+  it('skips silent sign-in when the session check fails', async () => {
+    vi.mocked(authApi.getMe).mockRejectedValue(new Error('Session check failed'))
+    expect(await getCasdoorSignInUrl()).toBeUndefined()
+    expect(authApi.getProviders).not.toHaveBeenCalled()
   })
 
   it('leaves deployments without Casdoor on their normal entry path', async () => {
     vi.mocked(authApi.getProviders).mockResolvedValue([])
     expect(await getCasdoorSignInUrl()).toBeUndefined()
-    expect(authApi.getMe).not.toHaveBeenCalled()
+    expect(authApi.getProviders).toHaveBeenCalledOnce()
   })
 })

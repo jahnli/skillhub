@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.dao.DataAccessException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.DurationStyle;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -41,6 +45,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 /** Casdoor browser logout and shared revocation of Casdoor-authenticated web sessions. */
 @Component
 public class CasdoorSessionLogout {
+    private static final Logger log = LoggerFactory.getLogger(CasdoorSessionLogout.class);
     public static final RequestMatcher BACK_CHANNEL = new AntPathRequestMatcher(
             "/api/v1/auth/casdoor/back-channel-logout", "POST");
     public static final String BROWSER_REDIRECT = CasdoorSessionLogout.class.getName() + ".redirect";
@@ -148,6 +153,7 @@ public class CasdoorSessionLogout {
                             && isRevoked(token)) {
                         session.invalidate();
                         SecurityContextHolder.clearContext();
+                        log.info("Casdoor session invalidated requestId={}", MDC.get("requestId"));
                     }
                 }
                 chain.doFilter(request, response);
@@ -156,40 +162,58 @@ public class CasdoorSessionLogout {
     }
 
     private void receiveLogout(HttpServletRequest request, HttpServletResponse response) {
+        String requestId = MDC.get("requestId");
+        log.info("Casdoor back-channel logout received requestId={}", requestId);
         if (decoder == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            rejectLogout(response, HttpServletResponse.SC_NOT_FOUND, "registration_unavailable");
             return;
         }
         String contentType = request.getContentType();
         if (contentType == null || !contentType.startsWith(MediaType.APPLICATION_FORM_URLENCODED_VALUE)) {
-            response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
+            rejectLogout(response, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "unsupported_content_type");
             return;
         }
         String[] values = request.getParameterValues("logout_token");
         if (values == null || values.length != 1 || !StringUtils.hasText(values[0])) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            rejectLogout(response, HttpServletResponse.SC_BAD_REQUEST, "expected_one_nonempty_logout_token");
             return;
         }
         Jwt token;
         try {
             token = decoder.decode(values[0]);
         } catch (JwtException | IllegalArgumentException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            rejectLogout(response, HttpServletResponse.SC_BAD_REQUEST, "jwt_validation_failed");
             return;
         }
         String sid = token.getClaimAsString("sid");
         String subject = token.getSubject();
         Instant now = Instant.now();
-        if (!matchesRegistration(token.getClaimAsString("iss"), token.getAudience())
-                || !validLogoutClaims(token, now)) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        if (!matchesRegistration(token.getClaimAsString("iss"), token.getAudience())) {
+            rejectLogout(response, HttpServletResponse.SC_BAD_REQUEST, "registration_mismatch");
             return;
         }
-        String key = StringUtils.hasText(sid) ? key("sid", sid) : key("sub", subject);
+        if (!validLogoutClaims(token, now)) {
+            rejectLogout(response, HttpServletResponse.SC_BAD_REQUEST, "invalid_logout_claims");
+            return;
+        }
+        boolean hasSid = StringUtils.hasText(sid);
+        String scope = hasSid ? "sid" : "sub";
+        String key = key(scope, hasSid ? sid : subject);
         // The signed cutoff is monotonic, so retries and replays cannot revoke later logins.
-        redis.execute(RECORD_LOGOUT, List.of(key), Long.toString(token.getIssuedAt().getEpochSecond()),
-                Long.toString(markerLifetime.toSeconds()));
+        try {
+            redis.execute(RECORD_LOGOUT, List.of(key), Long.toString(token.getIssuedAt().getEpochSecond()),
+                    Long.toString(markerLifetime.toSeconds()));
+        } catch (DataAccessException e) {
+            log.error("Casdoor back-channel logout failed reason=redis_write_failed requestId={}", requestId);
+            throw e;
+        }
         response.setStatus(HttpServletResponse.SC_OK);
+        log.info("Casdoor back-channel logout accepted status=200 scope={} requestId={}", scope, requestId);
+    }
+
+    private static void rejectLogout(HttpServletResponse response, int status, String reason) {
+        response.setStatus(status);
+        log.warn("Casdoor back-channel logout rejected status={} reason={} requestId={}", status, reason, MDC.get("requestId"));
     }
 
     static boolean validLogoutClaims(Jwt token, Instant now) {

@@ -16,6 +16,7 @@ import com.iflytek.skillhub.auth.entity.Role;
 import com.iflytek.skillhub.auth.entity.UserRoleBinding;
 import com.iflytek.skillhub.auth.oauth.AccountDisabledException;
 import com.iflytek.skillhub.auth.oauth.AccountMergedException;
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.AccountPendingException;
 import com.iflytek.skillhub.auth.oauth.SystemAccountLoginException;
@@ -70,7 +71,7 @@ class IdentityBindingServiceTest {
     void setUp() {
         service = new IdentityBindingService(bindingRepo, userRepo, roleBindingRepo,
                 globalNamespaceMembershipService, eventPublisher, initialRoleGrants,
-                new ImmediateTransactionOperations(), "oidc");
+                new ImmediateTransactionOperations(), new CasdoorRegistration("oidc"));
     }
 
     @Test

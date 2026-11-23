@@ -33,14 +33,14 @@
 ### 3.1 用户打开 SkillHub
 
 1. `web/src/bootstrap.ts` 在加载主 React 应用前调用 `getCasdoorSignInUrl()`。
-2. 前端请求认证提供方列表，并检查 `GET /api/v1/auth/me` 是否已有 SkillHub 会话。
-3. 匿名访问以及由当前 Casdoor registration 建立的会话都发起一次静默核验。本地密码或其他提供方的会话直接进入原页面。
-4. 浏览器访问后端 `/oauth2/authorization/{registrationId}`，携带 `silent=true`。返回地址保留业务页路径、查询参数和锚点，并附上 `skillhubSsoChecked=1`。回到业务页后，前端消费标记并清理地址栏，下一次刷新即可重新核验。
+2. 前端先请求 `GET /api/v1/auth/me`。已有 SkillHub 会话的用户直接进入原页面。
+3. 匿名访问时查询提供方列表，启用静默登录的 Casdoor 提供方才会触发授权。会话查询失败时继续加载页面。
+4. 浏览器访问后端 `/oauth2/authorization/{registrationId}`，携带 `silent=true`。返回地址保留业务页路径、查询参数和锚点，并附上 `skillhubSsoChecked=1`。回到业务页后，前端消费标记并清理地址栏，下一次刷新时重新查询 SkillHub 会话。
 5. 授权请求使用 OIDC `prompt=none` 和 PKCE。收到与本轮请求匹配的 `login_required` 时，后端核对会话 ID、用户 ID 和登录来源，再使原企业会话失效。要求同意授权或选择账号等错误不会触发这条注销逻辑。
 6. Spring Security 校验 OAuth `state`、PKCE 与 OIDC 响应，`CustomOidcUserService` 将身份交给现有 `OAuthLoginFlowService`/`IdentityBindingService`。身份绑定仍以提供方与其 `sub` 为准，邮箱只有在 `email_verified=true` 时作为可信邮箱。
 7. 登录成功处理器建立 SkillHub 会话，记录 OIDC ID Token 供后续注销联动使用，并按保存的 `returnTo` 返回原页面。
 
-认证回调、登录、注册及 CLI/device 等入口跳过自动核验。显式注销返回时消费 `signedOut=1` 并清理地址栏。刷新普通业务页会多一次授权往返。页面保持打开期间，原有的 `/me` 检查和后通道注销仍然生效。
+认证回调、登录、注册及 CLI/device 等入口跳过自动核验。显式注销返回时消费 `signedOut=1` 并清理地址栏。Casdoor 通过后通道通知撤销已登录用户的会话。通知生效后，前端在下次请求 `/me` 时感知退出。
 
 ## 4. 登录退出联动
 
@@ -114,11 +114,12 @@ SkillHub 在该用户后续请求时检查其保存的 ID Token 是否早于 Red
 本地以 `local` profile 运行时，通过 `--spring.config.additional-location=file:../.env.local.properties` 从外部文件加载注册信息。当前注册名为 `oidc`，以下为该文件的部分键：
 
 ```properties
-skillhub.auth.casdoor.registration-id=oidc
+spring.security.oauth2.client.registration.oidc.provider=oidc
+spring.security.oauth2.client.provider.oidc.issuer-uri=https://<casdoor-host>
 spring.security.oauth2.client.registration.oidc.redirect-uri=http://localhost:3000/login/oauth2/code/{registrationId}
 ```
 
-以上仅示意本地 HTTP 地址。实际 redirect URI 必须与 Casdoor 应用许可列表及 Spring 当前注册配置一致，注意 `{registrationId}` 展开结果、scheme、host、port、path 均须完全匹配。登出后的 `post_logout_redirect_uri` 也必须在 Casdoor 中允许。
+`oidc` 是 Spring 注册名，用于回调路径和已有身份绑定。本部署的提供方也命名为 `oidc`，其 `issuer-uri` 指向公司 Casdoor。静默登录、联动注销和员工资料同步共用这项提供方配置。实际 redirect URI 必须与 Casdoor 应用许可列表及 Spring 当前注册配置一致，注意 `{registrationId}` 展开结果、scheme、host、port、path 均须完全匹配。登出后的 `post_logout_redirect_uri` 也必须在 Casdoor 中允许。
 
 本地 Vite 回调插件另读取开发环境变量：
 

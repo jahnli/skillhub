@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -195,7 +198,8 @@ class CasdoorSessionLogoutTest {
     }
 
     @Test
-    void rejectsInvalidLogoutTokenBeforeWritingRevocation() throws Exception {
+    @ExtendWith(OutputCaptureExtension.class)
+    void rejectsInvalidLogoutTokenBeforeWritingRevocation(CapturedOutput output) throws Exception {
         var request = new MockHttpServletRequest("POST", "/api/v1/auth/casdoor/back-channel-logout");
         request.setServletPath(request.getRequestURI());
         request.setContentType("application/x-www-form-urlencoded");
@@ -206,6 +210,8 @@ class CasdoorSessionLogoutTest {
 
         assertThat(response.getStatus()).isEqualTo(400);
         verifyNoInteractions(redis);
+        assertThat(output.getAll()).contains("Casdoor back-channel logout received",
+                "rejected status=400 reason=jwt_validation_failed").doesNotContain("not-a-jwt");
     }
 
     @Test

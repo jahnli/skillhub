@@ -4,6 +4,7 @@ import com.iflytek.skillhub.auth.entity.IdentityBinding;
 import com.iflytek.skillhub.auth.oauth.AccountDisabledException;
 import com.iflytek.skillhub.auth.oauth.AccountMergedException;
 import com.iflytek.skillhub.auth.oauth.AccountPendingException;
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.SystemAccountLoginException;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
@@ -18,7 +19,6 @@ import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.domain.user.UserStatus;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -43,7 +43,7 @@ public class IdentityBindingService {
     private final GlobalNamespaceMembershipService globalNamespaceMembershipService;
     private final ApplicationEventPublisher eventPublisher;
     private final TransactionOperations transactions;
-    private final String casdoorRegistrationId;
+    private final CasdoorRegistration casdoorRegistration;
     private final InitialExternalRoleGrantService initialRoleGrants;
 
     @Autowired
@@ -54,10 +54,10 @@ public class IdentityBindingService {
                                   ApplicationEventPublisher eventPublisher,
                                   PlatformTransactionManager transactionManager,
                                   InitialExternalRoleGrantService initialRoleGrants,
-                                  @Value("${skillhub.auth.casdoor.registration-id:casdoor}") String casdoorRegistrationId) {
+                                  CasdoorRegistration casdoorRegistration) {
         this(bindingRepo, userRepo, roleBindingRepo, globalNamespaceMembershipService, eventPublisher,
                 initialRoleGrants,
-                requiresNewTransactions(transactionManager), casdoorRegistrationId);
+                requiresNewTransactions(transactionManager), casdoorRegistration);
     }
 
     IdentityBindingService(IdentityBindingRepository bindingRepo,
@@ -67,14 +67,14 @@ public class IdentityBindingService {
                            ApplicationEventPublisher eventPublisher,
                            InitialExternalRoleGrantService initialRoleGrants,
                            TransactionOperations transactions,
-                           String casdoorRegistrationId) {
+                           CasdoorRegistration casdoorRegistration) {
         this.bindingRepo = bindingRepo;
         this.userRepo = userRepo;
         this.roleBindingRepo = roleBindingRepo;
         this.globalNamespaceMembershipService = globalNamespaceMembershipService;
         this.eventPublisher = eventPublisher;
         this.transactions = transactions;
-        this.casdoorRegistrationId = casdoorRegistrationId;
+        this.casdoorRegistration = casdoorRegistration;
         this.initialRoleGrants = initialRoleGrants;
     }
 
@@ -177,7 +177,7 @@ public class IdentityBindingService {
         if (binding == null) {
             return null;
         }
-        boolean casdoor = casdoorRegistrationId.equals(claims.provider());
+        boolean casdoor = casdoorRegistration.matches(claims.provider());
         UserAccount user = (casdoor ? userRepo.findLockedFreshById(binding.getUserId()) : userRepo.findById(binding.getUserId()))
                 .orElseThrow(() -> new IllegalStateException("User not found for binding"));
         ensureExternalLoginAllowed(user);
@@ -213,7 +213,7 @@ public class IdentityBindingService {
 
     private void updateReturningProfile(UserAccount user, OAuthClaims claims) {
         if (trustedEmail(claims) != null) user.setEmail(claims.email());
-        if (casdoorRegistrationId.equals(claims.provider())) {
+        if (casdoorRegistration.matches(claims.provider())) {
             updateCasdoorProfile(user, claims);
         } else {
             user.setDisplayName(claims.providerLogin());
@@ -224,7 +224,7 @@ public class IdentityBindingService {
     }
 
     private void updateCasdoorProfile(UserAccount user, OAuthClaims claims) {
-        if (!casdoorRegistrationId.equals(claims.provider())) return;
+        if (!casdoorRegistration.matches(claims.provider())) return;
         var attributes = claims.extra();
         var properties = attributes.get("properties") instanceof Map<?, ?> nested ? nested : Map.of();
         String name = text(attributes.get("displayName"));
