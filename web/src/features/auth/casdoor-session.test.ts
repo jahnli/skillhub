@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authApi } from '@/api/client'
-import { getCasdoorSignInUrl, pauseCasdoorSignIn } from './casdoor-session'
+import { getCasdoorSignInUrl } from './casdoor-session'
 
 vi.mock('@/api/client', () => ({
   authApi: { getProviders: vi.fn(), getMe: vi.fn() },
@@ -17,14 +17,10 @@ vi.mock('@/shared/lib/base-path', async (importOriginal) => {
 
 describe('Casdoor entry', () => {
   beforeEach(() => {
-    const storage = new Map<string, string>()
+    const location = new URL('https://example.com/skills/space/demo?tab=files#readme')
     vi.stubGlobal('window', {
-      location: new URL('https://example.com/skills/space/demo?tab=files#readme'),
-      sessionStorage: {
-        getItem: (key: string) => storage.get(key),
-        setItem: (key: string, value: string) => storage.set(key, value),
-        removeItem: (key: string) => storage.delete(key),
-      },
+      location,
+      history: { replaceState: (_state: unknown, _title: string, href: string) => { location.href = href } },
     })
     vi.mocked(authApi.getProviders).mockResolvedValue([
       { id: 'oidc', name: 'Casdoor', authorizationUrl: '/oauth2/authorization/oidc', silentSignIn: true },
@@ -38,25 +34,29 @@ describe('Casdoor entry', () => {
     vi.unstubAllGlobals()
   })
 
-  it('preserves a deep link and suppresses repeated navigation until the cooldown expires', async () => {
-    vi.useFakeTimers()
-    const href = await getCasdoorSignInUrl()
-    const url = new URL(href!, window.location.origin)
-    expect(url.pathname).toBe('/skills/oauth2/authorization/oidc')
-    expect(url.searchParams.get('silent')).toBe('true')
-    expect(url.searchParams.get('returnTo')).toBe('/space/demo?tab=files#readme')
-    expect(await getCasdoorSignInUrl()).toBeUndefined()
-    window.location.pathname = '/skills/terms'
-    expect(await getCasdoorSignInUrl()).toBeUndefined()
-    expect(authApi.getProviders).toHaveBeenCalledTimes(1)
-    vi.advanceTimersByTime(5 * 60_000)
-    expect(await getCasdoorSignInUrl()).toBeDefined()
-  })
+  it.each([null, { userId: 'employee', platformRoles: [], displayName: 'Employee', oauthProvider: 'oidc' }])(
+    'checks on every reload, consuming the return marker once', async (user) => {
+      vi.mocked(authApi.getMe).mockResolvedValue(user)
+      const originalPage = window.location.href
+      for (let reload = 0; reload < 2; reload++) {
+        const href = await getCasdoorSignInUrl()
+        const entry = new URL(href!, originalPage)
+        expect(entry.pathname).toBe('/skills/oauth2/authorization/oidc')
+        expect(entry.searchParams.get('silent')).toBe('true')
+        window.location.href = window.location.origin + '/skills' + entry.searchParams.get('returnTo')
+        expect(await getCasdoorSignInUrl()).toBeUndefined()
+        expect(window.location.href).toBe(originalPage)
+      }
+      expect(authApi.getMe).toHaveBeenCalledTimes(2)
+    },
+  )
 
-  it('skips the automatic login on an explicit logout', async () => {
-    pauseCasdoorSignIn()
+  it('resumes checks on the next reload after explicit logout', async () => {
+    window.location.search = '?signedOut=1&tab=files'
     expect(await getCasdoorSignInUrl()).toBeUndefined()
+    expect(window.location.search).toBe('?tab=files')
     expect(authApi.getProviders).not.toHaveBeenCalled()
+    expect(await getCasdoorSignInUrl()).toBeDefined()
   })
 
   it.each([
@@ -69,8 +69,8 @@ describe('Casdoor entry', () => {
     expect(authApi.getProviders).not.toHaveBeenCalled()
   })
 
-  it('keeps an existing SkillHub session on its original page', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue({ userId: 'employee', displayName: 'Employee', platformRoles: [] })
+  it.each(['local', 'github', undefined])('preserves an existing %s session', async (oauthProvider) => {
+    vi.mocked(authApi.getMe).mockResolvedValue({ userId: 'employee', displayName: 'Employee', platformRoles: [], oauthProvider })
     expect(await getCasdoorSignInUrl()).toBeUndefined()
   })
 

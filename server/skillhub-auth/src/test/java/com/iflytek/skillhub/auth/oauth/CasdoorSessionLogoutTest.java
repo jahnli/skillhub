@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -79,10 +82,46 @@ class CasdoorSessionLogoutTest {
         var authorization = resolver.resolve(request);
         assertThat(authorization.getAuthorizationRequestUri()).contains("prompt=none", "code_challenge_method=S256", "nonce=");
         assertThat(request.getSession().getAttribute(SkillHubOAuth2AuthorizationRequestResolver.SILENT_STATE))
-                .isEqualTo(authorization.getState());
+                .isEqualTo(new SkillHubOAuth2AuthorizationRequestResolver.SilentCheck(authorization.getState(),
+                        request.getSession().getId(), null, "oidc"));
 
         request.removeParameter("silent");
         assertThat(resolver.resolve(request).getAuthorizationRequestUri()).doesNotContain("prompt=");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "oidc,oidc,login_required,true,true",
+            "oidc,oidc,login_required,false,false",
+            "oidc,oidc,interaction_required,true,false",
+            "oidc,oidc,consent_required,true,false",
+            "oidc,local,login_required,true,false",
+            "local,local,login_required,true,false"
+    })
+    void silentCallbackOnlyEndsTheMatchingEnterpriseSession(String initialProvider, String currentProvider,
+            String error, boolean matchingState, boolean shouldInvalidate) throws Exception {
+        var flow = mock(OAuthLoginFlowService.class);
+        var resolver = new SkillHubOAuth2AuthorizationRequestResolver(registrations, flow, List.of(), new CasdoorRegistration("oidc"));
+        var start = new MockHttpServletRequest("GET", "/oauth2/authorization/oidc");
+        start.setServletPath(start.getRequestURI());
+        start.addParameter("silent", "true");
+        var session = (MockHttpSession) start.getSession();
+        session.setAttribute("platformPrincipal", new PlatformPrincipal("u", "User", null, null, initialProvider, Set.of()));
+        var authorization = resolver.resolve(start);
+
+        var callback = new MockHttpServletRequest("GET", "/login/oauth2/code/oidc");
+        callback.setSession(session);
+        session.setAttribute("platformPrincipal", new PlatformPrincipal("u", "User", null, null, currentProvider, Set.of()));
+        callback.addParameter("state", matchingState ? authorization.getState() : "stale");
+        callback.addParameter("error", error);
+        when(flow.consumeReturnTo(session)).thenReturn("/skills?skillhubSsoChecked=1");
+        var response = new MockHttpServletResponse();
+        new OAuth2LoginFailureHandler(flow).onAuthenticationFailure(callback, response, new OAuth2AuthenticationException(error));
+
+        assertThat(session.isInvalid()).isEqualTo(shouldInvalidate);
+        if (matchingState) {
+            assertThat(response.getRedirectedUrl()).isEqualTo("/skills?skillhubSsoChecked=1");
+        }
     }
 
     @Test

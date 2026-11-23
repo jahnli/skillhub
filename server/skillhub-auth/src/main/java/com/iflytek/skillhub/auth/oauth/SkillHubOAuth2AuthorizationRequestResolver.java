@@ -1,6 +1,9 @@
 package com.iflytek.skillhub.auth.oauth;
 
+import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -26,6 +29,14 @@ public class SkillHubOAuth2AuthorizationRequestResolver
     private static final Logger log = LoggerFactory.getLogger(SkillHubOAuth2AuthorizationRequestResolver.class);
 
     static final String SILENT_STATE = SkillHubOAuth2AuthorizationRequestResolver.class.getName() + ".silentState";
+
+    record SilentCheck(String state, String sessionId, String userId, String provider) implements Serializable {
+        boolean matchesCurrentLogin(HttpSession session) {
+            return userId != null && sessionId.equals(session.getId())
+                    && session.getAttribute("platformPrincipal") instanceof PlatformPrincipal principal
+                    && userId.equals(principal.userId()) && provider.equals(principal.oauthProvider());
+        }
+    }
 
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
     private final OAuthLoginFlowService oauthLoginFlowService;
@@ -89,7 +100,11 @@ public class SkillHubOAuth2AuthorizationRequestResolver
             }
             if (casdoor.matches(authorizationRequest.getAttribute(OAuth2ParameterNames.REGISTRATION_ID))
                     && "true".equals(request.getParameter("silent"))) {
-                request.getSession().setAttribute(SILENT_STATE, authorizationRequest.getState());
+                session = request.getSession();
+                String userId = session.getAttribute("platformPrincipal") instanceof PlatformPrincipal principal
+                        && casdoor.matches(principal.oauthProvider()) ? principal.userId() : null;
+                session.setAttribute(SILENT_STATE, new SilentCheck(authorizationRequest.getState(), session.getId(),
+                        userId, casdoor.id()));
                 authorizationRequest = OAuth2AuthorizationRequest.from(authorizationRequest)
                         .additionalParameters(parameters -> parameters.put("prompt", "none"))
                         .authorizationRequestUri(UriComponentsBuilder

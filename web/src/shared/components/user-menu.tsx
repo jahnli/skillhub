@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
-import { pauseCasdoorSignIn } from '@/features/auth/casdoor-session'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
 import { canAccessGlobalReviewCenter } from '@/features/review/review-paths'
 import { withBasePath } from '@/shared/lib/base-path'
@@ -81,10 +80,9 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
-    let redirectTo = withBasePath('/')
+    let redirectTo = withBasePath('/?signedOut=1')
     try {
       redirectTo = await authApi.logoutWithProvider() ?? redirectTo
-      pauseCasdoorSignIn()
     } catch (error) {
       console.error('Logout failed:', error)
       setIsLoggingOut(false)

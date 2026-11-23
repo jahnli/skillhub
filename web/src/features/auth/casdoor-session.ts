@@ -1,37 +1,29 @@
 import { authApi } from '@/api/client'
 import { toRouterPath, withBasePath } from '@/shared/lib/base-path'
 
-const skipKey = 'skillhub:casdoor:skip-once:' + withBasePath('/')
-
-const cooldownMs = 5 * 60_000
-
-function rememberCasdoorCheck() {
-  window.sessionStorage.setItem(skipKey, String(Date.now() + cooldownMs))
-}
-
-export function pauseCasdoorSignIn() {
-  try {
-    rememberCasdoorCheck()
-  } catch {
-    // Automatic sign-in is skipped when storage is unavailable.
-  }
-}
+const checkComplete = 'skillhubSsoChecked'
 
 export async function getCasdoorSignInUrl(): Promise<string | undefined> {
-  const { pathname, search, hash } = window.location
-  const route = toRouterPath(pathname)
+  const page = new URL(window.location.href)
+  const route = toRouterPath(page.pathname)
   try {
-    const skipUntil = Number(window.sessionStorage.getItem(skipKey))
-    if (skipUntil > Date.now() || new URLSearchParams(search).has('signedOut')) return
+    // Consume the return marker before React mounts so the next reload checks again.
+    if (page.searchParams.get(checkComplete) === '1' || page.searchParams.get('signedOut') === '1') {
+      page.searchParams.delete(checkComplete)
+      page.searchParams.delete('signedOut')
+      window.history.replaceState(window.history.state, '', page.href)
+      return
+    }
     if (/^\/(?:oauth2|login|device|cli|register|reset-password|pending-approval|access-denied)(?:\/|$)/.test(route)) return
     const options = { timeoutMs: 2_000 }
     const providers = await authApi.getProviders(undefined, options)
     const casdoor = providers.find(({ silentSignIn }) => silentSignIn)
-    if (!casdoor || await authApi.getMe(options)) return
+    if (!casdoor) return
+    const user = await authApi.getMe(options)
+    if (user && user.oauthProvider !== casdoor.id) return
 
-    const returnTo = toRouterPath(pathname, search, hash)
-
-    rememberCasdoorCheck()
+    page.searchParams.set(checkComplete, '1')
+    const returnTo = toRouterPath(page.pathname, page.search, page.hash)
     const params = new URLSearchParams({ silent: 'true', returnTo })
     return withBasePath(casdoor.authorizationUrl + '?' + params)
   } catch {
