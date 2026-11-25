@@ -5,7 +5,7 @@ import { loadEnv, type Plugin } from 'vite'
 // correlating state with its session and exchanging the code with the PKCE verifier.
 export function casdoorLoopbackCallback(registration: string, issuer: string) {
   const entry = `/oauth2/authorization/${registration}`
-  const callback = `/login/oauth2/code/${registration}`
+  const callbacks = ['/api/v1/auth/login/callback', `/login/oauth2/code/${registration}`]
   const allowed = new Set(['state', 'iss', 'code', 'error', 'error_description', 'error_uri'])
   const maxBytes = 4096
   const loopbackHost = /^localhost(?::\d{1,5})?$/i
@@ -20,14 +20,15 @@ export function casdoorLoopbackCallback(registration: string, issuer: string) {
     if (!URL.canParse(location)) return
     const target = new URL(location)
     if (target.origin !== issuer || target.searchParams.get('response_type') !== 'code'
-      || target.searchParams.get('redirect_uri') !== `http://${host}${callback}`) return
+      || !callbacks.some(path => target.searchParams.get('redirect_uri') === `http://${host}${path}`)) return
 
     target.searchParams.set('response_mode', 'form_post')
     proxyResponse.headers.location = target.href
   }
 
   async function handleForm(request: IncomingMessage, response: ServerResponse, next: () => void) {
-    if (request.method !== 'POST' || request.url !== callback || !loopbackHost.test(request.headers.host ?? '')) {
+    const callback = request.url ?? ''
+    if (request.method !== 'POST' || !callbacks.includes(callback) || !loopbackHost.test(request.headers.host ?? '')) {
       next()
       return
     }

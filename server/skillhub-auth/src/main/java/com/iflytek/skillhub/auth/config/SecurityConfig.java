@@ -25,7 +25,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -138,6 +141,15 @@ public class SecurityConfig {
             })
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(authorizationRequestResolver))
+                .withObjectPostProcessor(new ObjectPostProcessor<OAuth2LoginAuthenticationFilter>() {
+                    @Override
+                    public <O extends OAuth2LoginAuthenticationFilter> O postProcess(O filter) {
+                        filter.setRequiresAuthenticationRequestMatcher(new OrRequestMatcher(
+                                new AntPathRequestMatcher(OAuth2LoginAuthenticationFilter.DEFAULT_FILTER_PROCESSES_URI),
+                                new AntPathRequestMatcher(CasdoorSessionLogout.LOGIN_CALLBACK, "GET")));
+                        return filter;
+                    }
+                })
                 .tokenEndpoint(token -> token.accessTokenResponseClient(tokenResponseClient))
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)

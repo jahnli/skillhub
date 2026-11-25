@@ -625,11 +625,13 @@ SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_ID=replace-me
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_SECRET=replace-me
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_PROVIDER=oidc
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_AUTHORIZATION_GRANT_TYPE=authorization_code
-SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_REDIRECT_URI={baseUrl}/login/oauth2/code/{registrationId}
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_REDIRECT_URI={baseUrl}/api/v1/auth/login/callback
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_SCOPE=openid,profile,email
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_NAME=OIDC
 SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI=https://idp.example.com/realms/skillhub
 ```
+
+接入 Casdoor 时，在其应用的重定向列表中分别登记公网地址下的 `/api/v1/auth/login/callback` 和 `/api/v1/auth/logout/callback`。其他提供方可继续使用各自的 `/login/oauth2/code/{registrationId}`。
 
 要接入多个 OIDC IdP，使用不同 registration id，例如 `okta`、`keycloak`，
 并把上面的环境变量中的 `OIDC` 替换为对应大写 id。registration id 会作为

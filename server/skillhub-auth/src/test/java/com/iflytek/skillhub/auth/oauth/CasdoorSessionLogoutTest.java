@@ -59,7 +59,7 @@ class CasdoorSessionLogoutTest {
     private final ClientRegistration registration = ClientRegistration.withRegistrationId("oidc")
             .clientId(CLIENT)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+            .redirectUri("{baseUrl}/api/v1/auth/login/callback")
             .authorizationUri(ISSUER + "/login/oauth/authorize")
             .tokenUri(ISSUER + "/api/login/oauth/access_token")
             .issuerUri(ISSUER)
@@ -146,7 +146,7 @@ class CasdoorSessionLogoutTest {
 
         assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).asString()
                 .startsWith(ISSUER + "/api/logout?id_token_hint=id-token")
-                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fskills%2Flogin%2Foauth2%2Fcode%2Foidc");
+                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fskills%2Fapi%2Fv1%2Fauth%2Flogout%2Fcallback");
     }
 
     @Test
@@ -160,19 +160,20 @@ class CasdoorSessionLogoutTest {
         request.addParameter("federated", "true");
         handler.prepareBrowserLogout(request, authenticate(request, "oidc", NOW));
         assertThat(request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT)).asString()
-                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Flogin%2Foauth2%2Fcode%2Foidc");
+                .contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fv1%2Fauth%2Flogout%2Fcallback");
     }
 
     @Test
     void callbackAfterLogoutReturnsToHomeWhileAuthorizationResponsesContinueToSpring() throws Exception {
-        var request = new MockHttpServletRequest("GET", "/skills/login/oauth2/code/oidc");
+        var request = new MockHttpServletRequest("GET", "/skills/api/v1/auth/logout/callback");
         request.setContextPath("/skills");
-        request.setServletPath("/login/oauth2/code/oidc");
+        request.setServletPath("/api/v1/auth/logout/callback");
         var response = new MockHttpServletResponse();
         var chain = new MockFilterChain();
         logout.filter().doFilter(request, response, chain);
         assertThat(response.getRedirectedUrl()).isEqualTo("/skills/?signedOut=1");
         assertThat(chain.getRequest()).isNull();
+        request.setServletPath("/api/v1/auth/login/callback");
         for (var parameter : List.of("code", "state", "error")) {
             request.addParameter(parameter, "value");
             var loginChain = new MockFilterChain();
@@ -200,7 +201,7 @@ class CasdoorSessionLogoutTest {
     @Test
     @ExtendWith(OutputCaptureExtension.class)
     void rejectsInvalidLogoutTokenBeforeWritingRevocation(CapturedOutput output) throws Exception {
-        var request = new MockHttpServletRequest("POST", "/api/v1/auth/casdoor/back-channel-logout");
+        var request = new MockHttpServletRequest("POST", "/api/v1/auth/back-channel-logout");
         request.setServletPath(request.getRequestURI());
         request.setContentType("application/x-www-form-urlencoded");
         request.addParameter("logout_token", "not-a-jwt");
@@ -237,9 +238,9 @@ class CasdoorSessionLogoutTest {
                     .issuer(ISSUER).audience(CLIENT).subject("user").jwtID("logout-id").issueTime(Date.from(NOW))
                     .claim("events", Map.of(CasdoorSessionLogout.LOGOUT_EVENT, Map.of())).build());
             notice.sign(new RSASSASigner(signingKey));
-            var request = new MockHttpServletRequest("POST", "/skills/api/v1/auth/casdoor/back-channel-logout");
+            var request = new MockHttpServletRequest("POST", "/skills/api/v1/auth/back-channel-logout");
             request.setContextPath("/skills");
-            request.setServletPath("/api/v1/auth/casdoor/back-channel-logout");
+            request.setServletPath("/api/v1/auth/back-channel-logout");
             request.setContentType("application/x-www-form-urlencoded; charset=UTF-8");
             request.addParameter("logout_token", notice.serialize());
             var response = new MockHttpServletResponse();

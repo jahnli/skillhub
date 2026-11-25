@@ -14,7 +14,7 @@ export async function getCasdoorSignInUrl(): Promise<string | undefined> {
       window.history.replaceState(window.history.state, '', page.href)
       return
     }
-    if (/^\/(?:oauth2|login|device|cli|register|reset-password|pending-approval|access-denied)(?:\/|$)/.test(route)) return
+    if (/^\/(?:api|oauth2|login|device|cli|register|reset-password|pending-approval|access-denied)(?:\/|$)/.test(route)) return
     const options = { timeoutMs: 2_000 }
     const user = await authApi.getMe(options)
     if (user) return

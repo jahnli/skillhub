@@ -57,6 +57,7 @@ describe('Casdoor entry', () => {
   })
 
   it.each([
+    '/api/v1/auth/login/callback?code=example&state=example', '/api/v1/auth/logout/callback',
     '/login/oauth2/code/oidc?code=example&state=example',
     '/oauth2/authorization/oidc', '/login?reason=accountDisabled', '/access-denied',
     '/pending-approval', '/?signedOut=1', '/device', '/cli/auth',

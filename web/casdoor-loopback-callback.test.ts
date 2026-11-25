@@ -3,7 +3,7 @@ import { casdoorLoopbackCallback } from './casdoor-loopback-callback'
 
 const issuer = 'https://sso.example.com'
 const host = 'localhost:3000'
-const callback = `http://${host}/login/oauth2/code/oidc`
+const callback = `http://${host}/api/v1/auth/login/callback`
 const adapter = casdoorLoopbackCallback('oidc', issuer)
 
 function authorize(entry: string, provider: string, redirectUri: string, silent: boolean) {

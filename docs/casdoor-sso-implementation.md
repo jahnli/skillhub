@@ -48,7 +48,7 @@
 
 用户菜单调用 `POST /api/v1/auth/logout?federated=true`。后端先注销 SkillHub session 并删除会话 Cookie；仅当当前认证身份来自配置的 Casdoor registration 时，才根据 OIDC provider metadata 中的 `end_session_endpoint` 生成 Casdoor 注销 URL。响应通过 `X-SkillHub-Logout-Url` 返回地址，前端再让浏览器导航到该地址。
 
-跳转会携带可用的 `id_token_hint`（旧会话没有保留 ID Token 时使用 `client_id`），以及与登录回调相同的 `post_logout_redirect_uri`。因此 Casdoor 应用必须允许该确切的登出后跳转 URI；SkillHub 不接受 Casdoor 任意指定的回跳地址。
+跳转会携带可用的 `id_token_hint`（旧会话没有保留 ID Token 时使用 `client_id`），以及独立的退出回调 `post_logout_redirect_uri`（`/api/v1/auth/logout/callback`）。因此 Casdoor 应用必须允许该确切的登出后跳转 URI；SkillHub 不接受 Casdoor 任意指定的回跳地址。
 
 用户在非 Casdoor 登录方式下退出，只清除 SkillHub 会话，不尝试退出 Casdoor。手动访问通用登出端点与前端 federated 登出流程的响应也有所区别。
 
@@ -57,7 +57,7 @@
 Casdoor 应配置 OIDC Back-Channel Logout 指向：
 
 ```text
-POST /api/v1/auth/casdoor/back-channel-logout
+POST /api/v1/auth/back-channel-logout
 ```
 
 后端使用 Casdoor issuer 的 JWK 验证签名，并校验 issuer、audience、Logout Token 时间、`jti`、无 `nonce` 以及 Back-Channel Logout event。合法通知在 Redis 写入以 `sid` 为优先、否则以 `sub` 为键的撤销时间标记；Lua 脚本只推进时间，不允许重放旧 token 撤销更新的登录会话。
@@ -97,7 +97,7 @@ SkillHub 在该用户后续请求时检查其保存的 ID Token 是否早于 Red
 
 ### 6.1 问题表现
 
-开发环境使用 `http://localhost:3000` 时，SkillHub 发给 Casdoor 的授权请求可以带 HTTP `redirect_uri`，但 Casdoor 或其前置代理实际返回的浏览器跳转地址却变成 `https://localhost:3000/login/oauth2/code/...`。本地 Vite 默认没有 HTTPS 服务，浏览器因此报 `ERR_SSL_PROTOCOL_ERROR`。
+开发环境使用 `http://localhost:3000` 时，SkillHub 发给 Casdoor 的授权请求可以带 HTTP `redirect_uri`，但 Casdoor 或其前置代理实际返回的浏览器跳转地址却变成 `https://localhost:3000/api/v1/auth/login/callback`。本地 Vite 默认没有 HTTPS 服务，浏览器因此报 `ERR_SSL_PROTOCOL_ERROR`。
 
 ### 6.2 处理方式
 
@@ -116,10 +116,10 @@ SkillHub 在该用户后续请求时检查其保存的 ID Token 是否早于 Red
 ```properties
 spring.security.oauth2.client.registration.oidc.provider=oidc
 spring.security.oauth2.client.provider.oidc.issuer-uri=https://<casdoor-host>
-spring.security.oauth2.client.registration.oidc.redirect-uri=http://localhost:3000/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.oidc.redirect-uri=http://localhost:3000/api/v1/auth/login/callback
 ```
 
-`oidc` 是 Spring 注册名，用于回调路径和已有身份绑定。本部署的提供方也命名为 `oidc`，其 `issuer-uri` 指向公司 Casdoor。静默登录、联动注销和员工资料同步共用这项提供方配置。实际 redirect URI 必须与 Casdoor 应用许可列表及 Spring 当前注册配置一致，注意 `{registrationId}` 展开结果、scheme、host、port、path 均须完全匹配。登出后的 `post_logout_redirect_uri` 也必须在 Casdoor 中允许。
+`oidc` 是 Spring 注册名，用于授权入口和已有身份绑定。本部署的提供方也命名为 `oidc`，其 `issuer-uri` 指向公司 Casdoor。静默登录、联动注销和员工资料同步共用这项提供方配置。实际 redirect URI 必须与 Casdoor 应用许可列表及 Spring 当前注册配置一致，协议、主机、端口和路径均须完全匹配。本地 Casdoor 重定向列表还需登记 `http://localhost:3000/api/v1/auth/logout/callback`。切换前先登记两个新地址。
 
 本地 Vite 回调插件另读取开发环境变量：
 

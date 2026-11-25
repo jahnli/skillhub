@@ -47,7 +47,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class CasdoorSessionLogout {
     private static final Logger log = LoggerFactory.getLogger(CasdoorSessionLogout.class);
     public static final RequestMatcher BACK_CHANNEL = new AntPathRequestMatcher(
-            "/api/v1/auth/casdoor/back-channel-logout", "POST");
+            "/api/v1/auth/back-channel-logout", "POST");
     public static final String BROWSER_REDIRECT = CasdoorSessionLogout.class.getName() + ".redirect";
     static final String SESSION_TOKEN = CasdoorSessionLogout.class.getName() + ".idToken";
     static final String LOGOUT_EVENT = "http://schemas.openid.net/event/backchannel-logout";
@@ -67,7 +67,9 @@ public class CasdoorSessionLogout {
     private final JwtDecoder decoder;
     private final String keyPrefix;
     private final Duration markerLifetime;
-    private final RequestMatcher browserCallback;
+    public static final String LOGIN_CALLBACK = "/api/v1/auth/login/callback";
+    private static final String LOGOUT_CALLBACK = "/api/v1/auth/logout/callback";
+    private static final RequestMatcher LOGOUT_RETURN = new AntPathRequestMatcher(LOGOUT_CALLBACK, "GET");
 
     public CasdoorSessionLogout(ClientRegistrationRepository registrations, StringRedisTemplate redis, CasdoorRegistration casdoor,
             @Value("${spring.session.redis.namespace:skillhub:session}") String sessionNamespace,
@@ -80,8 +82,6 @@ public class CasdoorSessionLogout {
                 + encodeKey(registration.getClientId()) + "}:";
         // A session sees the marker on its next request, or expires from inactivity first.
         this.markerLifetime = DurationStyle.detectAndParse(sessionTimeout).plus(TOKEN_MAX_AGE).plus(CLOCK_SKEW);
-        this.browserCallback = registration == null ? request -> false : new AntPathRequestMatcher(
-                "/login/oauth2/code/" + registration.getRegistrationId(), "GET");
     }
 
     static void rememberToken(HttpServletRequest request, OidcIdToken token) {
@@ -116,16 +116,22 @@ public class CasdoorSessionLogout {
             parameters.put("client", registration.getClientId());
         }
         builder.queryParam("post_logout_redirect_uri", "{returnUri}");
-        parameters.put("returnUri", loginRedirectUri(request));
+        parameters.put("returnUri", logoutRedirectUri(request));
         request.setAttribute(BROWSER_REDIRECT, builder.encode().buildAndExpand(parameters).toUriString());
     }
 
-    private String loginRedirectUri(HttpServletRequest request) {
+    private String logoutRedirectUri(HttpServletRequest request) {
         var base = ServletUriComponentsBuilder.fromContextPath(request).build();
-        return UriComponentsBuilder.fromUriString(registration.getRedirectUri()).buildAndExpand(Map.of(
+        String loginUrl = UriComponentsBuilder.fromUriString(registration.getRedirectUri()).buildAndExpand(Map.of(
                 "registrationId", registration.getRegistrationId(), "action", "login",
                 "baseUrl", base.toUriString(), "baseScheme", base.getScheme(), "baseHost", base.getHost(),
-                "basePort", base.getPort() < 0 ? "" : ":" + base.getPort(), "basePath", base.getPath())).toUriString();
+                "basePort", base.getPort() < 0 ? "" : ":" + base.getPort(), "basePath", request.getContextPath())).toUriString();
+        var login = UriComponentsBuilder.fromUriString(loginUrl);
+        String path = login.build().getPath();
+        String loginSuffix = path.endsWith(LOGIN_CALLBACK) ? LOGIN_CALLBACK : "/login/oauth2/code/" + registration.getRegistrationId();
+        String prefix = path.endsWith(loginSuffix) ? path.substring(0, path.length() - loginSuffix.length()) : request.getContextPath();
+        return login.replacePath(prefix + LOGOUT_CALLBACK)
+                .replaceQuery(null).fragment(null).build(true).toUriString();
     }
 
     public OncePerRequestFilter filter() {
@@ -133,9 +139,7 @@ public class CasdoorSessionLogout {
             @Override
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain) throws ServletException, IOException {
-                // Casdoor returns to the same callback without an authorization response after logout.
-                if (browserCallback.matches(request) && request.getParameter("code") == null
-                        && request.getParameter("error") == null && !StringUtils.hasLength(request.getParameter("state"))) {
+                if (registration != null && LOGOUT_RETURN.matches(request)) {
                     response.setStatus(HttpServletResponse.SC_FOUND);
                     response.setHeader("Location", request.getContextPath() + "/?signedOut=1");
                     return;
