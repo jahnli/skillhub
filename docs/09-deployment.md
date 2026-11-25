@@ -320,6 +320,12 @@ docker compose --env-file .env.release -f compose.release.yml up -d --force-recr
 6. 同时发布多架构 manifest：`server` / `web` 覆盖 `linux/amd64`、`linux/arm64` 与
    `linux/riscv64`，`scanner` 与 `github-sync` 覆盖 `linux/amd64`、`linux/arm64`
 
+### 手动发布到 Docker Hub
+
+在仓库的 Actions secrets 中配置 `DOCKER_USERNAME`（Docker Hub 用户名）和 `DOCKER_TOKEN`（有镜像推送权限的访问令牌）。将 `.github/workflows/docker-publish.yml` 合入 GitHub 默认分支后，进入 **Actions → Docker Publish → Run workflow**，选择要发布的分支，可选填写发布原因。
+
+该流程构建 `linux/amd64` 和 `linux/arm64` 两种架构，在该用户的 Docker Hub 命名空间下发布 `skillhub-server`、`skillhub-web`、`skillhub-scanner` 和 `skillhub-github-sync`。每个成功发布的镜像都会更新 `latest`，并写入 `git describe --tags --always` 生成的版本标签。四个镜像共用同一个版本；发布完成以四项构建全部成功为准。
+
 ## 7 配置管理
 
 ### 7.1 请求限流配置
