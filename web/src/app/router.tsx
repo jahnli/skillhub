@@ -153,6 +153,12 @@ const MyNamespacesPage = createLazyRouteComponent(
 const NamespaceManagementPage = createLazyRouteComponent(() => import('@/pages/dashboard/namespace-management'), 'NamespaceManagementPage')
 const NamespaceSettingsPage = createLazyRouteComponent(() => import('@/pages/dashboard/namespace-settings'), 'NamespaceSettingsPage')
 
+const OrganizationsPage = createLazyRouteComponent(
+  () => import('@/pages/dashboard/organizations'), 'OrganizationsPage', dashboardRouteOptions,
+)
+const OrganizationMembersPage = createLazyRouteComponent(
+  () => import('@/pages/dashboard/organizations'), 'OrganizationMembersPage', dashboardRouteOptions,
+)
 const NamespaceMembersPage = createLazyRouteComponent(
   () => import('@/pages/dashboard/namespace-members'),
   'NamespaceMembersPage',
@@ -176,6 +182,7 @@ const GithubSyncPage = createRoleProtectedRouteComponent(
   () => import('@/pages/dashboard/github-sync'), 'GithubSyncPage', ['SUPER_ADMIN'], dashboardRouteOptions,
 )
 const ReviewsPage = createLazyRouteComponent(() => import('@/pages/dashboard/reviews'), 'ReviewsPage', dashboardRouteOptions)
+const RepositoryReviewPage = createLazyRouteComponent(() => import('@/pages/dashboard/repository-review'), 'RepositoryReviewPage', dashboardRouteOptions)
 const ReviewProgressPage = createLazyRouteComponent(
   () => import('@/pages/dashboard/review-progress'),
   'ReviewProgressPage',
@@ -540,6 +547,20 @@ const dashboardNamespaceSettingsRoute = createRoute({
   component: NamespaceSettingsPage,
 })
 
+const dashboardOrganizationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'dashboard/organizations',
+  beforeLoad: requireAuth,
+  component: OrganizationsPage,
+})
+
+const dashboardOrganizationMembersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'dashboard/organizations/$organizationId',
+  beforeLoad: requireAuth,
+  component: OrganizationMembersPage,
+})
+
 const dashboardNamespaceMembersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'dashboard/namespaces/$slug/members',
@@ -619,6 +640,14 @@ const dashboardReviewsRoute = createRoute({
   beforeLoad: requireAuth,
   validateSearch: validateReviewSearch,
   component: ReviewsPage,
+})
+
+const dashboardRepositoryReviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'dashboard/reviews/repositories/$snapshotId',
+  beforeLoad: requireAuth,
+  validateSearch: validateReviewSearch,
+  component: RepositoryReviewPage,
 })
 
 const dashboardReviewProgressRoute = createRoute({
@@ -833,6 +862,8 @@ const routeTree = rootRoute.addChildren([
   dashboardNamespacesRoute,
   dashboardNamespaceManagementRoute,
   dashboardNamespaceSettingsRoute,
+  dashboardOrganizationsRoute,
+  dashboardOrganizationMembersRoute,
   dashboardNamespaceMembersRoute,
   dashboardNamespaceReviewsRoute,
   dashboardNamespaceGithubSourcesRoute,
@@ -841,6 +872,7 @@ const routeTree = rootRoute.addChildren([
   dashboardGithubSyncRoute,
   dashboardGithubDeepDiscoveryRoute,
   dashboardReviewsRoute,
+  dashboardRepositoryReviewRoute,
   dashboardReviewProgressRoute,
   dashboardReportsRoute,
   dashboardReviewDetailRoute,

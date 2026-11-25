@@ -3315,6 +3315,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organizationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationMembers"];
+        put?: never;
+        post: operations["addOrganizationMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/members/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["grantOrganizationRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listLoginConnections"];
+        put?: never;
+        post: operations["createLoginConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suspendLoginConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createLoginConnectionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/revisions/{revisionId}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["testLoginConnectionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/revisions/{revisionId}/secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["writeLoginConnectionSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/revisions/{revisionId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resumeLoginConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/revisions/{revisionId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activateLoginConnectionRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["disableLoginConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/device/authorize": {
         parameters: {
             query?: never;
@@ -5233,6 +5393,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/web/reviews/sync/groups/{snapshotId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGithubReviewGroupMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/sync/groups/{snapshotId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGithubReviewGroupMembers_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/web/reviews/sync/groups/{snapshotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGithubReviewGroup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/sync/groups/{snapshotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGithubReviewGroup_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/web/reviews/sync/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGithubReviewGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/sync/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGithubReviewGroups_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews/sync": {
         parameters: {
             query?: never;
@@ -6851,14 +7107,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/organizations/{organizationId}/login-connections": {
+    "/api/v1/organizations/{organizationId}/login-connections/{connectionId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["listLoginConnections"];
+        get: operations["getLoginConnection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/login-connections/management": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLoginConnectionManagement"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7543,6 +7815,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/web/github-repositories/{repositoryId}/install-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGithubRepositoryInstallPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cli/v1/github-repositories/{repositoryId}/install-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGithubRepositoryInstallPlan_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cli/v1/auth/whoami": {
         parameters: {
             query?: never;
@@ -7716,6 +8020,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["deleteSkillById_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/role-bindings/{bindingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokeOrganizationRole"];
         options?: never;
         head?: never;
         patch?: never;
@@ -9107,6 +9427,7 @@ export interface components {
             decisionMethod?: string;
             decisionScanTaskId?: string;
             autoPublicationGrantId?: string;
+            scanVerdict?: string;
         };
         BatchReviewRequest: {
             ids: number[];
@@ -9541,6 +9862,127 @@ export interface components {
         };
         ClawHubDeleteResponse: {
             ok?: boolean;
+        };
+        OrganizationMemberRequest: {
+            userId: string;
+        };
+        ApiResponseOrganizationMemberResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["OrganizationMemberResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        OrganizationMemberResponse: {
+            id?: string;
+            userId?: string;
+            displayName?: string;
+            status?: string;
+            /** Format: int64 */
+            authorityVersion?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            roles?: components["schemas"]["OrganizationRoleBindingResponse"][];
+        };
+        OrganizationRoleBindingResponse: {
+            id?: string;
+            userId?: string;
+            role?: string;
+            status?: string;
+        };
+        OrganizationRoleGrantRequest: {
+            /** @enum {string} */
+            role: "ORG_OWNER" | "IDENTITY_ADMIN" | "LOGIN_SECRET_ADMIN" | "MEMBER_ADMIN" | "ORG_AUDITOR";
+        };
+        ApiResponseOrganizationRoleBindingResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["OrganizationRoleBindingResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        LoginConnectionCreateRequest: {
+            displayName: string;
+            issuer: string;
+            clientId: string;
+        };
+        ApiResponseLoginConnectionResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["LoginConnectionResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        LoginConnectionHealthResponse: {
+            status?: string;
+            failureReason?: string;
+            /** Format: date-time */
+            checkedAt?: string;
+        };
+        LoginConnectionResponse: {
+            id?: string;
+            displayName?: string;
+            status?: string;
+            activeRevisionId?: string;
+            lastTestedRevisionId?: string;
+            activeRevision?: components["schemas"]["LoginConnectionRevisionResponse"];
+            latestRevision?: components["schemas"]["LoginConnectionRevisionResponse"];
+            health?: components["schemas"]["LoginConnectionHealthResponse"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        LoginConnectionRevisionResponse: {
+            id?: string;
+            /** Format: int64 */
+            revision?: number;
+            issuer?: string;
+            clientId?: string;
+            secretConfigured?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ConfirmedConnectionActionRequest: {
+            confirmed: boolean;
+        };
+        LoginConnectionRevisionCreateRequest: {
+            expectedRevisionId: string;
+            issuer: string;
+            clientId: string;
+        };
+        ApiResponseLoginConnectionTestResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["LoginConnectionTestResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        LoginConnectionTestResponse: {
+            success?: boolean;
+            revisionId?: string;
+            failureReason?: string;
+            /** Format: date-time */
+            checkedAt?: string;
+        };
+        LoginConnectionSecretRequest: {
+            clientSecret: string;
         };
         AuthorizeRequest: {
             userCode?: string;
@@ -10194,6 +10636,24 @@ export interface components {
             errorCode?: string;
             errorArgs?: string[];
         };
+        GithubSkillSourceResponse: {
+            ownerLogin?: string;
+            repositoryName?: string;
+            skillPath?: string;
+            commitSha?: string;
+            /** Format: int32 */
+            syncRevision?: number;
+            licenseStatus?: string;
+            licenseDocuments?: components["schemas"]["LicenseDocument"][];
+            upstreamTag: components["schemas"]["UpstreamTag"];
+            /** @description Version declared in this Skill's SKILL.md, independent of repository tags */
+            declaredVersion?: string | null;
+        };
+        LicenseDocument: {
+            scope?: string;
+            path?: string;
+            bundled?: boolean;
+        };
         SkillVersionDetailResponse: {
             /** Format: int64 */
             id?: number;
@@ -10209,6 +10669,18 @@ export interface components {
             parsedMetadataJson?: string;
             manifestJson?: string;
             complianceSnapshot?: components["schemas"]["ComplianceSnapshotResponse"];
+            githubSource?: components["schemas"]["GithubSkillSourceResponse"];
+        };
+        UpstreamTag: {
+            /** @enum {string} */
+            status: "EXACT" | "AFTER_TAG" | "NO_TAG" | "UNKNOWN" | "UNRECORDED";
+            /** @enum {string} */
+            scope: "REPOSITORY";
+            tag?: string | null;
+            tagCommitSha?: string | null;
+            /** Format: int32 */
+            commitsAfterTag?: number | null;
+            reason?: string | null;
         };
         ApiResponseSkillVersionCompareResponse: {
             /** Format: int32 */
@@ -10399,21 +10871,6 @@ export interface components {
             errorCode?: string;
             errorArgs?: string[];
         };
-        GithubSkillSourceResponse: {
-            ownerLogin?: string;
-            repositoryName?: string;
-            skillPath?: string;
-            commitSha?: string;
-            /** Format: int32 */
-            syncRevision?: number;
-            licenseStatus?: string;
-            licenseDocuments?: components["schemas"]["LicenseDocument"][];
-        };
-        LicenseDocument: {
-            scope?: string;
-            path?: string;
-            bundled?: boolean;
-        };
         SkillDetailResponse: {
             /** Format: int64 */
             id?: number;
@@ -10581,6 +11038,83 @@ export interface components {
         LicenseEvidence: {
             status?: string;
             documents?: components["schemas"]["EvidenceDocument"][];
+        };
+        ApiResponsePageResponseGithubReviewGroupMemberResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["PageResponseGithubReviewGroupMemberResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        GithubReviewGroupMemberResponse: {
+            review?: components["schemas"]["ReviewTaskResponse"];
+            scanStatus?: string;
+        };
+        PageResponseGithubReviewGroupMemberResponse: {
+            items?: components["schemas"]["GithubReviewGroupMemberResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+        };
+        ApiResponseGithubReviewGroupResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["GithubReviewGroupResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        GithubReviewGroupResponse: {
+            /** Format: int64 */
+            snapshotId?: number;
+            /** Format: int64 */
+            namespaceId?: number;
+            namespace?: string;
+            /** Format: int64 */
+            repositoryId?: number;
+            owner?: string;
+            repository?: string;
+            commitSha?: string;
+            /** Format: date-time */
+            capturedAt?: string;
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            scanPassed?: number;
+            /** Format: int64 */
+            scanWaiting?: number;
+            /** Format: int64 */
+            scanBlocked?: number;
+        };
+        ApiResponsePageResponseGithubReviewGroupResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["PageResponseGithubReviewGroupResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        PageResponseGithubReviewGroupResponse: {
+            items?: components["schemas"]["GithubReviewGroupResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
         };
         ApiResponsePageResponseGithubSyncReviewQueueItemResponse: {
             /** Format: int32 */
@@ -11991,6 +12525,26 @@ export interface components {
             updatedAt?: string;
             permissions?: components["schemas"]["OrganizationPermissionsResponse"];
         };
+        ApiResponsePageResponseOrganizationMemberResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["PageResponseOrganizationMemberResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        PageResponseOrganizationMemberResponse: {
+            items?: components["schemas"]["OrganizationMemberResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+        };
         ApiResponsePageResponseLoginConnectionSummaryResponse: {
             /** Format: int32 */
             code?: number;
@@ -12025,6 +12579,20 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
+        };
+        ApiResponseLoginConnectionManagementResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["LoginConnectionManagementResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        LoginConnectionManagementResponse: {
+            enabled?: boolean;
         };
         ApiResponseListAuthProviderResponse: {
             /** Format: int32 */
@@ -12848,6 +13416,7 @@ export interface components {
             versionId: number;
             fingerprint: string;
             downloadUrl: string;
+            githubSource?: components["schemas"]["GithubSkillSourceResponse"];
         };
         ApiResponseCliSearchResponse: {
             /** Format: int32 */
@@ -12899,6 +13468,35 @@ export interface components {
         CliNamespaceSyncResponse: {
             items?: components["schemas"]["CliNamespaceSyncItemResponse"][];
             nextCursor?: string;
+        };
+        ApiResponseGithubRepositoryInstallPlanResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["GithubRepositoryInstallPlanResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+            errorCode?: string;
+            errorArgs?: string[];
+        };
+        GithubRepositoryInstallPlanResponse: {
+            repositoryId: string;
+            owner: string;
+            name: string;
+            members: components["schemas"]["Member"][];
+        };
+        Member: {
+            /** Format: int64 */
+            skillId: number;
+            namespace: string;
+            slug: string;
+            displayName: string;
+            version: string;
+            /** Format: int64 */
+            versionId: number;
+            fingerprint: string;
+            downloadUrl: string;
         };
         ApiResponseCliWhoAmIResponse: {
             /** Format: int32 */
@@ -17545,6 +18143,7 @@ export interface operations {
                 q?: string;
                 reviewKind?: string;
                 originType?: string;
+                scanVerdict?: string;
                 page?: number;
                 size?: number;
                 sortDirection?: string;
@@ -17598,6 +18197,7 @@ export interface operations {
                 q?: string;
                 reviewKind?: string;
                 originType?: string;
+                scanVerdict?: string;
                 page?: number;
                 size?: number;
                 sortDirection?: string;
@@ -19651,6 +20251,324 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ClawHubPublishResponse"];
+                };
+            };
+        };
+    };
+    listOrganizationMembers: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseOrganizationMemberResponse"];
+                };
+            };
+        };
+    };
+    addOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrganizationMemberResponse"];
+                };
+            };
+        };
+    };
+    grantOrganizationRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationRoleGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrganizationRoleBindingResponse"];
+                };
+            };
+        };
+    };
+    listLoginConnections: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseLoginConnectionSummaryResponse"];
+                };
+            };
+        };
+    };
+    createLoginConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginConnectionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    suspendLoginConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmedConnectionActionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    createLoginConnectionRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginConnectionRevisionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    testLoginConnectionRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionTestResponse"];
+                };
+            };
+        };
+    };
+    writeLoginConnectionSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginConnectionSecretRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    resumeLoginConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmedConnectionActionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    activateLoginConnectionRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmedConnectionActionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    disableLoginConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmedConnectionActionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
                 };
             };
         };
@@ -22728,6 +23646,166 @@ export interface operations {
             };
         };
     };
+    listGithubReviewGroupMembers: {
+        parameters: {
+            query?: {
+                status?: string;
+                namespaceId?: number;
+                q?: string;
+                reviewKind?: string;
+                page?: number;
+                size?: number;
+                sortDirection?: string;
+            };
+            header?: never;
+            path: {
+                snapshotId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseGithubReviewGroupMemberResponse"];
+                };
+            };
+        };
+    };
+    listGithubReviewGroupMembers_1: {
+        parameters: {
+            query?: {
+                status?: string;
+                namespaceId?: number;
+                q?: string;
+                reviewKind?: string;
+                page?: number;
+                size?: number;
+                sortDirection?: string;
+            };
+            header?: never;
+            path: {
+                snapshotId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseGithubReviewGroupMemberResponse"];
+                };
+            };
+        };
+    };
+    getGithubReviewGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshotId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGithubReviewGroupResponse"];
+                };
+            };
+        };
+    };
+    getGithubReviewGroup_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshotId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGithubReviewGroupResponse"];
+                };
+            };
+        };
+    };
+    listGithubReviewGroups: {
+        parameters: {
+            query?: {
+                status?: string;
+                namespaceId?: number;
+                q?: string;
+                reviewKind?: string;
+                page?: number;
+                size?: number;
+                sortDirection?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseGithubReviewGroupResponse"];
+                };
+            };
+        };
+    };
+    listGithubReviewGroups_1: {
+        parameters: {
+            query?: {
+                status?: string;
+                namespaceId?: number;
+                q?: string;
+                reviewKind?: string;
+                page?: number;
+                size?: number;
+                sortDirection?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseGithubReviewGroupResponse"];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query: {
@@ -25086,12 +26164,32 @@ export interface operations {
             };
         };
     };
-    listLoginConnections: {
+    getLoginConnection: {
         parameters: {
-            query?: {
-                page?: number;
-                size?: number;
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                connectionId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionResponse"];
+                };
+            };
+        };
+    };
+    getLoginConnectionManagement: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 organizationId: string;
@@ -25106,7 +26204,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageResponseLoginConnectionSummaryResponse"];
+                    "*/*": components["schemas"]["ApiResponseLoginConnectionManagementResponse"];
                 };
             };
         };
@@ -26077,6 +27175,50 @@ export interface operations {
             };
         };
     };
+    getGithubRepositoryInstallPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGithubRepositoryInstallPlanResponse"];
+                };
+            };
+        };
+    };
+    getGithubRepositoryInstallPlan_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGithubRepositoryInstallPlanResponse"];
+                };
+            };
+        };
+    };
     whoami_1: {
         parameters: {
             query?: never;
@@ -26313,6 +27455,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseSkillDeleteResponse"];
+                };
+            };
+        };
+    };
+    revokeOrganizationRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                bindingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrganizationRoleBindingResponse"];
                 };
             };
         };
