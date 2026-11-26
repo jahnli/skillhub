@@ -1,6 +1,6 @@
 # Casdoor 单点登录与员工资料同步实现说明
 
-本文记录 `v1-linqiang` 分支中 Casdoor 与 SkillHub 的登录/退出联动、员工资料同步，以及本地 HTTP 开发回调修复。内容按当前源码和提交整理；它描述的是 SkillHub 当前实现，不代表任意 Casdoor 部署已经完成相应配置或真实账号端到端验收。
+本文记录 `v1-linqiang` 分支中 Casdoor 与 SkillHub 的登录/退出联动和员工资料同步。内容按当前源码和提交整理；它描述的是 SkillHub 当前实现，不代表任意 Casdoor 部署已经完成相应配置或真实账号端到端验收。
 
 ## 1. 需求与范围
 
@@ -9,8 +9,6 @@
 1. 用户已在同一浏览器登录 Casdoor 时，打开 SkillHub 自动尝试登录，不要求先点击登录按钮。
 2. Casdoor 注销后，SkillHub 对应会话失效；用户在 SkillHub 主动退出时，也发起 Casdoor 注销。
 3. Casdoor 登录时导入姓名、邮箱、头像、公司、部门、工号、岗位、手机号；首次建号导入，后续登录更新。
-
-此外，为本地开发使用 `http://localhost:3000` 的情况增加 Vite 回调适配，避免 Casdoor/前置代理把授权回调地址改成 `https://localhost:3000`。
 
 实现仍使用项目已有 OAuth2/OIDC 登录、身份绑定、Spring Session 和用户资料 API。它不是浏览器之间共享 Casdoor Cookie，也不将 Casdoor 的用户 ID 作为 SkillHub 内部用户 ID。
 
@@ -24,9 +22,8 @@
 | Casdoor 注销联动 | `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/oauth/CasdoorSessionLogout.java`、`SecurityConfig.java` | 浏览器注销跳转、Back-Channel Logout 验证与会话撤销 |
 | 员工资料持久化 | `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/user/UserAccount.java`、`EmployeeProfile.java`、`server/skillhub-app/src/main/resources/db/migration/V127__employee_profile.sql` | 增加员工字段并保存至用户表 |
 | 资料 API/UI | `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/UserProfileController.java`、`web/src/pages/settings/profile.tsx` | 向当前用户返回资料并在个人资料页展示 |
-| 本地 HTTP 回调 | `web/casdoor-loopback-callback.ts`、`web/vite.config.ts` | 仅在符合条件的 Vite 开发代理请求上改用 `form_post` 并安全转回 GET |
 
-主要提交：`2d26e5fb`（会话联动及字段模型）、`39023a95`（员工资料同步）、`dd218def`（回调修复及集成调整）。
+主要提交：`2d26e5fb`（会话联动及字段模型）、`39023a95`（员工资料同步）、`dd218def`（静默登录及注销联动调整）。
 
 ## 3. 登录流程
 
@@ -93,23 +90,7 @@ SkillHub 在该用户后续请求时检查其保存的 ID Token 是否早于 Red
 
 个人资料 API 将这五个员工属性附加在既有当前用户资料响应中，前端个人资料页读取并展示。员工字段由身份提供方维护；资料页的展示不等同于允许用户直接修改这些字段。
 
-## 6. 本地 HTTP 回调修复
-
-### 6.1 问题表现
-
-开发环境使用 `http://localhost:3000` 时，SkillHub 发给 Casdoor 的授权请求可以带 HTTP `redirect_uri`，但 Casdoor 或其前置代理实际返回的浏览器跳转地址却变成 `https://localhost:3000/api/v1/auth/login/callback`。本地 Vite 默认没有 HTTPS 服务，浏览器因此报 `ERR_SSL_PROTOCOL_ERROR`。
-
-### 6.2 处理方式
-
-`casdoorLoopbackPlugin()` 只在 Vite 开发服务器启用、未启用本地 HTTPS、配置了 `/oauth2` 代理且指定了开发注册名和 issuer 时工作。它仅对 `localhost` 上符合目标授权端点、Casdoor issuer 和精确 HTTP 回调 URI 的授权响应，将 `response_mode` 改为 `form_post`。
-
-浏览器向确切本地回调发出 URL 编码表单 POST 后，中间件检查来源、Content-Type、体积上限、issuer、state、授权码/错误二选一和重复/未知字段，再以 303 跳转至相同回调的 GET。Spring 最终仍通过原浏览器 GET 请求接收回调，读取原 session 中的 OAuth state 与 PKCE verifier。适配器不交换授权码、不创建认证会话，也不替代 Spring 的 state/PKCE 验证。
-
-`Origin: null` 是已观察到的 Edge HTTPS 页面向 HTTP loopback 发送表单时的浏览器行为；适配器仅在上述严格的 localhost 回调路径/字段校验下接受它。
-
-该适配仅适用于本地 Vite 开发，不是生产反向代理规则或通用 HTTP 安全降级方案。生产部署应使用与 Casdoor 注册配置相匹配的 HTTPS 公共域名和回调地址。
-
-## 7. 配置与部署检查
+## 6. 配置与部署检查
 
 本地以 `local` profile 运行时，通过 `--spring.config.additional-location=file:../.env.local.properties` 从外部文件加载注册信息。当前注册名为 `oidc`，以下为该文件的部分键：
 
@@ -121,16 +102,9 @@ spring.security.oauth2.client.registration.oidc.redirect-uri=http://localhost:30
 
 `oidc` 是 Spring 注册名，用于授权入口和已有身份绑定。本部署的提供方也命名为 `oidc`，其 `issuer-uri` 指向公司 Casdoor。静默登录、联动注销和员工资料同步共用这项提供方配置。实际 redirect URI 必须与 Casdoor 应用许可列表及 Spring 当前注册配置一致，协议、主机、端口和路径均须完全匹配。本地 Casdoor 重定向列表还需登记 `http://localhost:3000/api/v1/auth/logout/callback`。切换前先登记两个新地址。
 
-本地 Vite 回调插件另读取开发环境变量：
-
-```properties
-SKILLHUB_DEV_CASDOOR_REGISTRATION_ID=<实际注册ID>
-SKILLHUB_DEV_CASDOOR_ISSUER=https://<casdoor-host>
-```
-
 不要把 client secret 写入前端变量、提交到 Git 或粘贴到日志。部署 Casdoor scope/claim 时，需确保所需字段真的进入 OIDC UserInfo 或 ID Token；启用 Back-Channel Logout 并将 URL 配置到可由 Casdoor 服务端访问的 SkillHub 公网地址；确认 Redis 可用及 session namespace 在各实例间一致。应用/迁移部署时还需确认 `V127` 已由 Flyway 执行。
 
-## 8. 测试与验收
+## 7. 测试与验收
 
 本次实现增加/更新了以下测试：
 
@@ -140,9 +114,6 @@ SKILLHUB_DEV_CASDOOR_ISSUER=https://<casdoor-host>
 - `IdentityBindingServiceTest`：首次绑定、已绑定用户的员工资料同步与更新行为。
 - `UserProfileControllerTest`、`profile.test.ts`：资料 API 与界面字段。
 - `casdoor-session.test.ts`：自动探测、跳过条件和失败回退。
-- `casdoor-loopback-callback.test.ts`：合法回调以及错误来源、非法字段、过大表单等拒绝行为。
-
-功能开发时对现有本地服务执行过真实浏览器回调链路检查：匿名浏览器从 HTTP localhost 到 Casdoor，再 POST 到 HTTP 回调、303 回到 HTTP GET，最终可观察到 Spring 的 `login_required` 结果而非 HTTPS 协议错误；回调中间件正反例状态码检查通过。另有隔离浏览器模拟授权端点，验证 Casdoor 登录页的自动/手动入口会按 `form_post` 返回 localhost。相关 Vitest 两个文件共 17 项、前端 build 和受影响 ESLint 检查通过。
 
 **尚未完成的验收：**此前最近一次真实公司账号独立复测虽然回到了 HTTP 首页，但没有观察到真实 `/api/v1/auth/me` 返回已登录用户，因此不能据此宣称“已登录 Casdoor 用户打开 SkillHub 自动建立 SkillHub 会话”已经端到端通过。模拟 OAuth 响应只证明前端/回调协议处理，不证明真实 token 换取、Casdoor 声明释放、Back-Channel Logout 可达或员工属性映射与公司配置一致。
 
@@ -156,11 +127,10 @@ SKILLHUB_DEV_CASDOOR_ISSUER=https://<casdoor-host>
 
 真实账号测试时不要记录授权码、state、Cookie、ID Token 或 client secret；只记录 URL scheme/path、参数是否存在、响应状态及脱敏用户结果。
 
-## 9. 实现边界与后续建议
+## 8. 实现边界与后续建议
 
 - 自动登录依赖浏览器能访问 Casdoor，且 Casdoor 同站策略/浏览器隐私设置允许已有 IdP 会话用于静默授权；这不是跨站共享会话 Cookie。
 - Casdoor 退出联动依赖 Back-Channel Logout 的服务端配置与网络可达；前端轮询不是 Casdoor 全局注销的替代品。
 - SkillHub 主动注销是否能清除 Casdoor 全局会话，取决于 Casdoor 发布 `end_session_endpoint`、接受 `id_token_hint`/`client_id` 并允许回跳 URI。
 - 员工字段 claim 名称须与实际 Casdoor 应用配置核对，特别是公司 `affiliation`、工号 `properties.job_number`、岗位 `properties.job_type`。
-- 本地 Vite 的 `form_post` 适配只解决回调协议/本地 scheme 问题，不会修复 Casdoor 登录策略、用户权限、token exchange 或资料声明配置。
 - 下一步优先补齐一套使用专用 Casdoor 测试账号和隔离 SkillHub 环境的真实 E2E/Smoke，把两个方向的注销、静默成功/失败、员工字段更新和数据库最终状态作为验收断言。

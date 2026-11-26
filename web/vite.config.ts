@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { casdoorLoopbackPlugin } from './casdoor-loopback-callback'
 import { validateBasePath } from './base-path-config'
 
 const JS_BUILD_TARGET = 'es2020'
@@ -59,15 +58,9 @@ function registryGuidePlugin(): Plugin {
   }
 }
 
-// A local TLS certificate lets the browser and Spring use the same public origin.
-const devPfxPath = process.env.SKILLHUB_DEV_HTTPS_PFX
-const devHttps = devPfxPath
-  ? { pfx: readFileSync(devPfxPath), passphrase: process.env.SKILLHUB_DEV_HTTPS_PASSPHRASE }
-  : undefined
-
 export default defineConfig({
   base: basePath,
-  plugins: [registryGuidePlugin(), react(), casdoorLoopbackPlugin()],
+  plugins: [registryGuidePlugin(), react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -89,25 +82,26 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    https: devHttps,
     watch: {
       usePolling: true,
       interval: 150,
     },
     proxy: {
+      // Spring builds OAuth redirects from the browser-facing host and port.
+      '/api/v1/auth/': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+      },
       '/api': {
         target: 'http://localhost:8080',
-        xfwd: true,
         changeOrigin: true,
       },
       '/oauth2': {
         target: 'http://localhost:8080',
-        xfwd: true,
         changeOrigin: false,
       },
       '/login/oauth2': {
         target: 'http://localhost:8080',
-        xfwd: true,
         // Preserve the browser-facing localhost:3000 host so Spring's
         // post-login redirect does not send the SPA to localhost:8080.
         changeOrigin: false,
