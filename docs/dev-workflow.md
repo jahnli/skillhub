@@ -27,6 +27,18 @@ This starts:
 
 SkillHub now pins a shared Docker Compose project name for local development, so multiple git worktrees can reuse the same dependency containers instead of fighting over `5432`, `6379`, and `9000`.
 
+On Windows, run the PowerShell launcher from the repository root:
+
+```powershell
+.\start-dev.ps1
+```
+
+The launcher requires Windows Terminal, Windows PowerShell, Java and Node.js/pnpm as listed above. It opens `SkillHub Backend` and `SkillHub Frontend` tabs in the shared `local-dev` window used by the AI Gateway/Casdoor launchers. Repeated launches reuse registered running tabs. The backend packages the Maven modules before running the jar with `--spring.profiles.active=local --spring.config.additional-location=file:../.env.local.properties` from `server/`. Prepare `.env.local.properties` in the repository root with your dependency connections and local settings; the launcher does not start Docker or set scanner/business-log environment overrides. The frontend installs dependencies when missing or when the lockfile is newer, then runs Vite with a strict port on `127.0.0.1` (override with `DEV_WEB_HOST`).
+
+SkillHub tabs are placed after all other registered projects, including AI Gateway and Casdoor, with `SkillHub Backend` followed by `SkillHub Frontend`. Other projects keep their relative order. Repeated launches also apply this ordering to existing registered tabs.
+
+Manage dependency services separately. Application build/runtime errors remain visible in their tabs; the launcher does not wait for application health. It tracks terminal sessions separately from `make dev-all`, so stop any existing foreground or Make-managed application instance before switching launchers. To stop or rebuild an application, press Ctrl+C in its tab, close that tab, then rerun `.\start-dev.ps1`. Close a failed application's tab before retrying as well; open idle tabs remain registered so tab ordering stays consistent.
+
 ### Backend restarts
 
 **Frontend:** Vite HMR is enabled by default. Save a file and the browser updates instantly.
