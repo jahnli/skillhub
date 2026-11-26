@@ -1,35 +1,60 @@
 ---
 name: git-commit-push
-description: 使用英文约定式提交信息提交并推送 SkillHub 改动，按实际远端配置核验目标，并在明确的 GitLab 提交信息校验失败时使用受限回退。
+description: >-
+  使用英文约定式提交信息提交并推送单个或多个 Git 仓库的改动，并处理 GitLab
+  提交信息校验失败。本项目默认一次提交后同步推送 GitHub 与 GitLab，不负责自动改写历史。
 ---
 
-# SkillHub Git 提交与推送
+# Git 提交
 
-读取[工作流](../../../.trellis/spec/workflow/index.md)、[贡献指南](../../../CONTRIBUTING.md)和[测试入口](../../../.trellis/spec/testing/index.md)。用户要求提交时沿用本技能既有约定：除非明确仅本地提交或不要推送，否则包含推送；只要求审查、写提交信息或创建技能时不执行 Git 写操作。
+用于用户要求“提交”“创建 commit”或“提交并推送”时。除非用户明确说“仅本地提交”或“不要推送”，否则“提交”默认包含创建 commit 和推送。提交标题遵循[约定式提交
+(Conventional Commits)](https://www.conventionalcommits.org/zh-hans/v1.0.0/)：
 
-## 提交范围
+```text
+<type>[optional scope][!]: <description>
+```
 
-检查仓库根目录、当前分支、`git status --short --untracked-files=all`、已暂存和未暂存差异。单个逻辑变化一个提交；多个仓库分别处理，不跨仓库套用 SkillHub 目标。
+常用 `type` 包括 `feat`、`fix`、`refactor`、`perf`、`docs`、`test`、`build`、`ci`、`chore` 和 `revert`。标题使用祈使语气、首字母小写、不以句号结尾；破坏性变更在类型后加 `!`，并在正文或页脚写明 `BREAKING CHANGE:`。
 
-只暂存本次明确范围，保留用户已有修改；混合文件使用可审查的局部暂存。已有无关 staged 内容时，选择只提交本次路径的安全方式或先说明无法可靠分离的具体阻塞，不将其一并提交。不要默认 `git add -A`。
+提交信息必须使用英文，包括标题描述、正文和页脚说明；用户用中文提出需求时，也必须将改动概括为英文。例如：
 
-提交信息标题、正文及说明使用英文，格式为 `<type>(<scope>): <description>`，简洁描述实际行为。按贡献指南使用现有用户身份 `git commit -s`，不代填或修改作者身份；提交身份缺失时报告缺项。提交前执行适用检查并报告环境限制，不擅自跳过相关失败或用旧结果代替。
+```text
+feat(dashboard): add frequently used models to overview
+```
 
-## 远端选择
+## 提交前
 
-本技能适配时核实的配置只有 `origin`，URL 为 `https://gitlab.semi-tech.com/stc/skillhub`，当前工作分支为 `v1`。这些是现状记录，不是永久强制目标；每次重新读取 remote、push URL、branch upstream 和 refspec。
+1. 确认当前仓库根目录，并检查所有相关仓库的 `git status`、未暂存差异和已暂存差异。
+2. 识别本次任务涉及的仓库。单个仓库只创建一个提交；配置了多个仓库时，每个有本次改动的仓库分别创建一个提交，不能把多个仓库的改动合并成一个提交。
+3. 只暂存本次任务产生的文件。保留用户已有的无关改动，不使用 `git add -A` 覆盖式暂存，除非已确认工作区全部改动都属于本次任务。
+4. 根据实际改动选择最具体的 `type` 和可选 `scope`，检查提交标题是否符合 Conventional Commits，并确认标题、正文和页脚说明均为英文。
 
-- 用户指定目标优先；否则沿用当前分支已配置的推送目标。未配置 tracking 时，若已确认唯一 fork 远端为 origin，可使用同名当前分支，并在操作前说明。
-- 多个候选目标无法可靠区分时询问；不从 README 推断远端，不自动添加 GitHub remote，不套用 ai-gateway 的双远端发布。
-- 仅当用户已指定或当前会话明确授权多个远端时，将同一提交分别推送。排除仅拉取的上游；不能遍历所有 remote。
-- detached HEAD、远端地址与预期不符或目标分支不明确时先调查，不能猜 main/v1 或变更 Git 配置。
+## 推送目标
+
+一个本地仓库只创建一次提交，多个 remote 接收同一个提交。本项目默认推送到以下两个远端，不能因为分支只跟踪其中一个就省略另一个：
+
+| remote | 地址 | 默认目标分支 |
+| --- | --- | --- |
+| `github` | `https://github.com/jahnli/skillhub` | 用户指定分支，否则当前分支 |
+| `gitlab` | `https://gitlab.semi-tech.com/stc/skillhub` | 与 GitHub 相同 |
+
+- 用户明确要求仅本地提交、仅推某个远端或指定其他目标时，以用户要求为准。
+- `upstream`（`iflytek/skillhub`）仅用于拉取上游更新，不属于默认推送目标；不能遍历所有 remote 推送，也不能向它重试推送。
+- 提交前检查实际 remote URL 和目标分支。默认目标缺失或 URL 与上表不符时，先查明配置，不能静默跳过或替换远端。
+- 当前 `github` 与 `gitlab` 的 fetch refspec 共用 `refs/remotes/origin/*`；`origin/v1` 不能证明两个远端都已同步。分别用 `git ls-remote --heads github <目标分支>` 和 `git ls-remote --heads gitlab <目标分支>` 核对实际 tip。
+- 对其他本地仓库，按用户指定目标或该仓库约定推送；没有多远端约定时使用当前分支配置的上游，不套用本项目的远端地址。
 
 ## 提交与核验
 
-完成暂存和审查后创建提交，记录 SHA。远端推送使用明确 refspec，例如经核实目标为 origin/v1 时执行 `git push origin HEAD:refs/heads/v1`。不要自动 amend、rebase、`--no-verify`、强推或修改 hooks。
+- 每个目标仓库依次执行 `git add <明确文件>` 和 `git commit -s -m "..."`，记录提交哈希，再将同一提交依次推送到所有选定远端。只有用户明确要求仅本地提交时才跳过推送。
+- 本项目用户要求“提交到 v1”时，默认依次执行 `git push github v1:refs/heads/v1` 和 `git push gitlab v1:refs/heads/v1`；其他分支替换为实际目标分支。推送前确认所有目标远端都允许快进，推送期间不另外创建提交。
+- 不要自动使用 `--amend`、`--no-verify`、`--force`、`rebase` 或修改 Git 配置。
+- 提交完成后，逐个仓库检查 `git status --short` 和 `git log -1 --oneline`，报告提交哈希、仓库路径和提交标题。
+- 每个远端推送后查询其实际目标 tip，与记录的提交哈希比较。所有选定远端一致才算完成；“Everything up-to-date”也须核对实际 tip。
+- 逐个报告 remote、分支和结果。普通推送失败时保留完整错误输出，按下文处理 GitLab 提交信息校验失败；无法恢复时停止后续推送，明确已成功、失败和未执行的目标。保留本地提交供续接，不回滚已成功远端，也不能将部分同步报告为完成。
 
-普通推送明确被 GitLab 的提交信息校验拒绝时，读取 [git-push-skip-lint](../git-push-skip-lint/SKILL.md)，在其适用条件下用同一目标重试一次；认证、保护分支、non-fast-forward、测试及扫描错误不适用。
+## GitLab 提交信息校验失败
 
-每个推送目标用 `git ls-remote --heads <remote> <完整目标ref>` 核对实际 tip 等于记录的提交；本地 tracking ref 和“Everything up-to-date”不足以代替。一个目标失败时保留本地提交及已成功结果，报告失败和未执行目标，不自动回滚或继续扩展范围。
+普通推送明确因 GitLab 提交信息格式或 commitlint 校验失败时，读取并使用 `git-push-skip-lint` skill 的流程。先执行普通推送；确认属于该类失败后，保持失败命令的 remote、分支和 refspec，添加 `-o skip-lint` 重试。本项目通常为 `git push -o skip-lint gitlab v1:refs/heads/v1`，不得改用不存在的 `origin` 或切换到其他远端。
 
-检查最终状态和 `git log -1 --oneline`，交付提交 SHA、标题、仓库、实际 remote/分支、推送核验结果及剩余修改。提交推送不自动触发部署工作；若仓库工作流会因 push 触发，按实际配置说明影响。
+不要因权限、认证、网络、分支落后、non-fast-forward、冲突、测试失败或安全扫描失败使用 `-o skip-lint`。重试仍失败时停止，不要强推、改写历史或继续修改提交。
