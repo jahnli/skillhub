@@ -35,18 +35,18 @@ feat(dashboard): add frequently used models to overview
 
 | remote | 地址 | 默认目标分支 |
 | --- | --- | --- |
-| `github` | `https://github.com/jahnli/skillhub` | 用户指定分支，否则当前分支 |
-| `gitlab` | `https://gitlab.semi-tech.com/stc/skillhub` | 与 GitHub 相同 |
+| `github` | `https://github.com/jahnli/new-api` | 用户指定分支，否则当前分支 |
+| `gitlab` | `https://gitlab.semi-tech.com/eed/ai-gateway` | 与 GitHub 相同 |
 
 - 用户明确要求仅本地提交、仅推某个远端或指定其他目标时，以用户要求为准。
-- `upstream`（`iflytek/skillhub`）仅用于拉取上游更新，不属于默认推送目标；不能遍历所有 remote 推送，也不能向它重试推送。
+- `upstream`（`QuantumNous/new-api`）仅用于拉取上游更新，不属于默认推送目标；不能遍历所有 remote 推送，也不能向它重试推送。
 - 提交前检查实际 remote URL 和目标分支。默认目标缺失或 URL 与上表不符时，先查明配置，不能静默跳过或替换远端。
 - 当前 `github` 与 `gitlab` 的 fetch refspec 共用 `refs/remotes/origin/*`；`origin/v1` 不能证明两个远端都已同步。分别用 `git ls-remote --heads github <目标分支>` 和 `git ls-remote --heads gitlab <目标分支>` 核对实际 tip。
 - 对其他本地仓库，按用户指定目标或该仓库约定推送；没有多远端约定时使用当前分支配置的上游，不套用本项目的远端地址。
 
 ## 提交与核验
 
-- 每个目标仓库依次执行 `git add <明确文件>` 和 `git commit -s -m "..."`，记录提交哈希，再将同一提交依次推送到所有选定远端。只有用户明确要求仅本地提交时才跳过推送。
+- 每个目标仓库依次执行 `git add <明确文件>` 和 `git commit -m "..."`，记录提交哈希，再将同一提交依次推送到所有选定远端。只有用户明确要求仅本地提交时才跳过推送。
 - 本项目用户要求“提交到 v1”时，默认依次执行 `git push github v1:refs/heads/v1` 和 `git push gitlab v1:refs/heads/v1`；其他分支替换为实际目标分支。推送前确认所有目标远端都允许快进，推送期间不另外创建提交。
 - 不要自动使用 `--amend`、`--no-verify`、`--force`、`rebase` 或修改 Git 配置。
 - 提交完成后，逐个仓库检查 `git status --short` 和 `git log -1 --oneline`，报告提交哈希、仓库路径和提交标题。

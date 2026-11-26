@@ -71,6 +71,21 @@ try {
 
         # Build the required modules, then run with the root's local properties file.
         $backendCommand = @'
+$expectedJar = [IO.Path]::GetFullPath((Join-Path (Get-Location) 'skillhub-app/target/skillhub-app-0.1.0.jar'))
+$portSetting = Select-String -LiteralPath '../.env.local.properties' -Pattern '^\s*server\.port\s*=\s*(\d+)\s*$' | Select-Object -Last 1
+$backendPort = if ($portSetting) { [int]$portSetting.Matches[0].Groups[1].Value } else { 8080 }
+$listeners = @(Get-NetTCPConnection -State Listen -LocalPort $backendPort -ErrorAction SilentlyContinue)
+if ($listeners.Count -gt 0) {
+    foreach ($listener in $listeners) {
+        $owner = Get-CimInstance Win32_Process -Filter "ProcessId=$($listener.OwningProcess)"
+        $jarArgument = '(?i)(?:^|\s)-jar\s+"?' + [regex]::Escape($expectedJar).Replace('\\', '[/\\]') + '"?(?=\s|$)'
+        if ($owner.Name -ne 'java.exe' -or $owner.CommandLine -notmatch $jarArgument) {
+            throw "Port $backendPort belongs to another process. Stop it explicitly or configure another backend port."
+        }
+    }
+    $serviceReused = $true
+    Write-Host "SkillHub backend is already running on port $backendPort; using the existing instance. Stop it first if you need to rebuild."
+} else {
 & .\mvnw.cmd -pl skillhub-app -am clean package '-DskipTests'
 if ($LASTEXITCODE -ne 0) { throw "Backend build failed with code $LASTEXITCODE." }
 $appJar = @(Get-ChildItem -LiteralPath 'skillhub-app/target' -Filter 'skillhub-app-*.jar' -File)
@@ -78,6 +93,7 @@ if ($appJar.Count -ne 1) { throw 'Expected one packaged skillhub-app jar under s
 $java = if ($env:JAVA_BIN) { $env:JAVA_BIN } else { 'java.exe' }
 & $java -jar $appJar[0].FullName '--spring.profiles.active=local' '--spring.config.additional-location=file:../.env.local.properties'
 if ($LASTEXITCODE -ne 0) { throw "Backend exited with code $LASTEXITCODE." }
+}
 '@
         $frontendCommand = @'
 $modulesPath = 'node_modules/.modules.yaml'
@@ -121,11 +137,16 @@ if ($LASTEXITCODE -ne 0) { throw "Frontend exited with code $LASTEXITCODE." }
 @{ ProcessId = `$PID; StartTimeTicks = `$process.StartTime.ToUniversalTime().Ticks } |
     ConvertTo-Json | Set-Content -LiteralPath '$registrationPath' -Encoding UTF8
 try {
+    `$serviceReused = `$false
 $($service.Command)
 } catch {
     Write-Host `$_ -ForegroundColor Red
 }
-Write-Host 'Close this tab and rerun start-dev.ps1 to restart this service.'
+if (`$serviceReused) {
+    Write-Host 'The existing backend continues running independently. Closing this tab will not stop it.'
+} else {
+    Write-Host 'Close this tab and rerun start-dev.ps1 to restart this service.'
+}
 "@
             # Encoding keeps quotes and command separators intact through wt.exe.
             $encodedCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))

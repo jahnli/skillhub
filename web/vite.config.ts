@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { validateBasePath } from './base-path-config'
@@ -58,54 +58,58 @@ function registryGuidePlugin(): Plugin {
   }
 }
 
-export default defineConfig({
-  base: basePath,
-  plugins: [registryGuidePlugin(), react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  const backendTarget = loadEnv(mode, __dirname, 'SKILLHUB_DEV_').SKILLHUB_DEV_API_TARGET ?? 'http://localhost:8080'
+
+  return {
+    base: basePath,
+    plugins: [registryGuidePlugin(), react()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
     },
-  },
-  build: {
-    target: JS_BUILD_TARGET,
-    cssTarget: LEGACY_BROWSER_TARGETS,
-  },
-  optimizeDeps: {
-    esbuildOptions: {
+    build: {
       target: JS_BUILD_TARGET,
+      cssTarget: LEGACY_BROWSER_TARGETS,
     },
-  },
-  test: {
-    exclude: ['**/node_modules/**', '**/e2e/**'],
-    testTimeout: 30000,
-    hookTimeout: 30000,
-  },
-  server: {
-    port: 3000,
-    watch: {
-      usePolling: true,
-      interval: 150,
-    },
-    proxy: {
-      // Spring builds OAuth redirects from the browser-facing host and port.
-      '/api/v1/auth/': {
-        target: 'http://localhost:8080',
-        changeOrigin: false,
-      },
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/oauth2': {
-        target: 'http://localhost:8080',
-        changeOrigin: false,
-      },
-      '/login/oauth2': {
-        target: 'http://localhost:8080',
-        // Preserve the browser-facing localhost:3000 host so Spring's
-        // post-login redirect does not send the SPA to localhost:8080.
-        changeOrigin: false,
+    optimizeDeps: {
+      esbuildOptions: {
+        target: JS_BUILD_TARGET,
       },
     },
-  },
+    test: {
+      exclude: ['**/node_modules/**', '**/e2e/**'],
+      testTimeout: 30000,
+      hookTimeout: 30000,
+    },
+    server: {
+      port: 3000,
+      watch: {
+        usePolling: true,
+        interval: 150,
+      },
+      proxy: {
+        // Spring builds OAuth redirects from the browser-facing host and port.
+        '/api/v1/auth/': {
+          target: backendTarget,
+          changeOrigin: false,
+        },
+        '/api': {
+          target: backendTarget,
+          changeOrigin: true,
+        },
+        '/oauth2': {
+          target: backendTarget,
+          changeOrigin: false,
+        },
+        '/login/oauth2': {
+          target: backendTarget,
+          // Preserve the browser-facing localhost:3000 host so Spring's
+          // post-login redirect does not send the SPA to the backend port.
+          changeOrigin: false,
+        },
+      },
+    },
+  }
 })
