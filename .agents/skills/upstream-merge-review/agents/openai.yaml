@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 合并复盘"
+  short_description: "基于固定合并提交复盘 SkillHub 实际接入内容、本地影响及上线前提"
+  default_prompt: "使用 $upstream-merge-review 复盘指定的 SkillHub 合并提交，说明行为变化、取舍与验证限制。"

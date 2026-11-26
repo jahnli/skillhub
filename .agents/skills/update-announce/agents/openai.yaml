@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 更新公告"
+  short_description: "根据 SkillHub 已提交的实际变化生成中文更新公告，按日期或版本核实范围"
+  default_prompt: "使用 $update-announce 整理 SkillHub 最近一个自然月的已提交功能变化，输出可复制的 Markdown 公告。"

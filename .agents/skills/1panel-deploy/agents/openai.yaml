@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 1Panel 部署"
+  short_description: "通过已配置的 1Panel API 更新 SkillHub 多组件应用并核实部署结果"
+  default_prompt: "使用 $1panel-deploy 将已核实的 SkillHub 组件镜像部署到指定目标，并报告运行和健康状态。"

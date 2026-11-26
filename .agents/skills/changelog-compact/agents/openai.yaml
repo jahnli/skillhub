@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 日志精简"
+  short_description: "核实并精简 SkillHub 本地定制记录，合并重复说明并保留有效业务约束"
+  default_prompt: "使用 $changelog-compact 整理当前 SkillHub 二开记录，保留有依据的有效行为与兼容要求。"

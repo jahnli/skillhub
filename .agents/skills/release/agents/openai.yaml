@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 应用发布"
+  short_description: "串联 SkillHub 多组件镜像发布和指定 1Panel 目标部署，逐阶段核实结果"
+  default_prompt: "使用 $release 发布指定 SkillHub 远端版本并部署到已选的 1Panel 目标，核实各阶段结果。"

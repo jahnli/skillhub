@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 上游合并"
+  short_description: "合并 SkillHub 上游更新，保护本地定制并审查冲突、自动合并和验证结果"
+  default_prompt: "使用 $upstream-merge 同步已确认的 SkillHub 上游来源，保护本地功能并完成适用验证。"

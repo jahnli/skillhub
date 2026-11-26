@@ -1,0 +1,7 @@
+interface:
+  display_name: "Git 提交"
+  short_description: "使用英文约定式信息提交 SkillHub 改动，并按实际远端配置推送和核验结果"
+  default_prompt: "使用 $git-commit-push 提交当前 SkillHub 改动，按实际远端及授权范围推送并核验结果。"
+
+policy:
+  allow_implicit_invocation: true

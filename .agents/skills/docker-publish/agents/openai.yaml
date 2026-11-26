@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub 镜像发布"
+  short_description: "触发已确认仓库的 SkillHub 多组件镜像发布，跟踪运行并核实版本产物"
+  default_prompt: "使用 $docker-publish 发布指定 SkillHub 远端版本的组件镜像，并返回实际运行与产物证据。"

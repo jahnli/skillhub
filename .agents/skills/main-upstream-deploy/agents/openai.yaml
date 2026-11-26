@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub main 合并部署"
+  short_description: "隔离合并 SkillHub main 上游更新，推送并发布镜像后通过 SSH 部署核验"
+  default_prompt: "使用 $main-upstream-deploy 按项目本地目标配置合并 main、发布镜像并通过 SSH 部署核验。"
