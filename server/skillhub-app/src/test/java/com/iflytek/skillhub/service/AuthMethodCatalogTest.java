@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
@@ -35,7 +36,7 @@ class AuthMethodCatalogTest {
             new AuthSessionBootstrapProperties(),
             List.of(),
             List.of(),
-            enabledSettings()
+            enabledSettings(), new CasdoorRegistration("oidc")
         );
 
         assertThat(catalog.listOAuthProviders(null))
@@ -94,7 +95,7 @@ class AuthMethodCatalogTest {
             bootstrapProperties,
             List.of(directProvider),
             List.of(bootstrapProvider),
-            enabledSettings()
+            enabledSettings(), new CasdoorRegistration("oidc")
         );
 
         assertThat(catalog.listMethods(null))
@@ -144,7 +145,7 @@ class AuthMethodCatalogTest {
             bootstrapProperties,
             List.of(directProvider),
             List.of(bootstrapProvider),
-            enabledSettings()
+            enabledSettings(), new CasdoorRegistration("oidc")
         );
 
         assertThat(catalog.listMethods(null))

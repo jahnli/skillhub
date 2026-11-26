@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import java.util.Set;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +23,8 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
 
     private static final Logger log = LoggerFactory.getLogger(OAuth2LoginFailureHandler.class);
 
+    private static final Set<String> SILENT_FAILURES = Set.of(
+            "login_required", "interaction_required", "account_selection_required", "consent_required");
     private final OAuthLoginFlowService oauthLoginFlowService;
 
     public OAuth2LoginFailureHandler(OAuthLoginFlowService oauthLoginFlowService) {
@@ -31,6 +36,26 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
                                          AuthenticationException exception)
             throws IOException, ServletException {
         String returnTo = oauthLoginFlowService.consumeReturnTo(request.getSession(false));
+        var session = request.getSession(false);
+        Object saved = session == null ? null : session.getAttribute(SkillHubOAuth2AuthorizationRequestResolver.SILENT_STATE);
+        var check = saved instanceof SkillHubOAuth2AuthorizationRequestResolver.SilentCheck pending ? pending : null;
+        // Older in-flight requests stored only the state. They can return, but cannot revoke a session.
+        Object state = check == null ? saved : check.state();
+        if (state instanceof String && state.equals(request.getParameter("state"))) {
+            session.removeAttribute(SkillHubOAuth2AuthorizationRequestResolver.SILENT_STATE);
+            if (exception instanceof OAuth2AuthenticationException oauthException
+                    && SILENT_FAILURES.contains(oauthException.getError().getErrorCode())) {
+                if ("login_required".equals(oauthException.getError().getErrorCode())
+                        && "login_required".equals(request.getParameter("error"))
+                        && check != null && check.matchesCurrentLogin(session)) {
+                    session.invalidate();
+                    SecurityContextHolder.clearContext();
+                }
+                getRedirectStrategy().sendRedirect(request, response,
+                        returnTo == null ? OAuthLoginRedirectSupport.DEFAULT_TARGET_URL : returnTo);
+                return;
+            }
+        }
         String redirectTarget = oauthLoginFlowService.resolveFailureRedirect(exception, returnTo);
         log.warn("OAuth login failed: exceptionType={}, returnToPresent={}, redirectPath={}",
                 exception.getClass().getSimpleName(), returnTo != null, redirectTarget);

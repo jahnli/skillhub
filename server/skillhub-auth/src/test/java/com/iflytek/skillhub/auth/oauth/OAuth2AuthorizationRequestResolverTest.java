@@ -5,6 +5,7 @@ import com.iflytek.skillhub.auth.policy.AccessPolicy;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -15,6 +16,16 @@ import static org.mockito.Mockito.mock;
 class OAuth2AuthorizationRequestResolverTest {
 
     private SkillHubOAuth2AuthorizationRequestResolver resolver;
+
+    @Test
+    void selectsCasdoorBySpringProviderWithoutChangingTheRegistrationId() {
+        MockEnvironment environment = new MockEnvironment();
+        assertThat(new CasdoorRegistration(environment).matches("casdoor")).isTrue();
+        environment.setProperty("spring.security.oauth2.client.registration.oidc.provider", "github");
+        assertThat(new CasdoorRegistration(environment).matches("oidc")).isFalse();
+        environment.setProperty("spring.security.oauth2.client.registration.oidc.provider", "oidc");
+        assertThat(new CasdoorRegistration(environment).matches("oidc")).isTrue();
+    }
 
     @BeforeEach
     void setUp() {
@@ -37,7 +48,7 @@ class OAuth2AuthorizationRequestResolverTest {
         );
         resolver = new SkillHubOAuth2AuthorizationRequestResolver(
                 new InMemoryClientRegistrationRepository(github),
-                oauthLoginFlowService
+                oauthLoginFlowService, java.util.List.of(), new CasdoorRegistration("oidc")
         );
     }
 
@@ -145,7 +156,7 @@ class OAuth2AuthorizationRequestResolverTest {
         return new SkillHubOAuth2AuthorizationRequestResolver(
                 new InMemoryClientRegistrationRepository(registration),
                 flowService,
-                java.util.List.of(customizer)
+                java.util.List.of(customizer), new CasdoorRegistration("oidc")
         );
     }
 

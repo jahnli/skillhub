@@ -107,6 +107,11 @@ public class UserProfileController extends BaseApiController {
                 displayName,
                 avatarUrl,
                 user.getEmail(),
+                user.getCompany(),
+                user.getDepartment(),
+                user.getEmployeeNumber(),
+                user.getJobTitle(),
+                user.getPhone(),
                 pendingChanges,
                 fieldPolicies
         );

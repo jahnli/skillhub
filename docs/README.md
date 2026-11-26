@@ -25,6 +25,7 @@ Use the documentation site for user workflows, repository guides for engineering
 ## Contributors and integrators
 
 - [Contributing](../CONTRIBUTING.md), [development workflow](dev-workflow.md), [engineering specs](../.trellis/spec/index.md)
+- [Casdoor SSO and employee profile sync implementation](casdoor-sso-implementation.md)
 - [System architecture](01-system-architecture.md), [domain model](02-domain-model.md), [API design](06-api-design.md)
 - [Skill package protocol](07-skill-protocol.md), [lifecycle contract](14-skill-lifecycle.md), [Suite semantics](25-skill-suites.md), [authoring drafts](27-authoring-drafts.md)
 - [Runtime integration](skillhub/en/guide/runtime-integration.md), [OpenClaw](openclaw-integration-en.md), [Hermes](hermes-integration-en.md), [DeepSeek Harness](dsh-integration-en.md)

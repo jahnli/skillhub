@@ -34,7 +34,7 @@ class OAuth2LoginHandlersTest {
         OAuthLoginFlowService oauthLoginFlowService = mock(OAuthLoginFlowService.class);
         OAuth2LoginSuccessHandler handler = new OAuth2LoginSuccessHandler(
                 new com.iflytek.skillhub.auth.session.PlatformSessionService(),
-                oauthLoginFlowService
+                oauthLoginFlowService, new CasdoorRegistration("oidc")
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -73,11 +73,28 @@ class OAuth2LoginHandlersTest {
     }
 
     @Test
+    void successHandlerRetainsIdTokenForConfiguredCasdoorRegistration() throws Exception {
+        var handler = new OAuth2LoginSuccessHandler(new com.iflytek.skillhub.auth.session.PlatformSessionService(),
+                mock(OAuthLoginFlowService.class), new CasdoorRegistration("oidc"));
+        var request = new MockHttpServletRequest();
+        var principal = new com.iflytek.skillhub.auth.rbac.PlatformPrincipal(
+                "user-1", "User", null, null, "oidc", Set.of());
+        var token = mock(org.springframework.security.oauth2.core.oidc.OidcIdToken.class);
+        var oidcUser = mock(org.springframework.security.oauth2.core.oidc.user.OidcUser.class);
+        org.mockito.Mockito.when(oidcUser.getAttributes()).thenReturn(Map.of("platformPrincipal", principal));
+        org.mockito.Mockito.when(oidcUser.getIdToken()).thenReturn(token);
+
+        handler.onAuthenticationSuccess(request, new MockHttpServletResponse(),
+                new UsernamePasswordAuthenticationToken(oidcUser, null, List.of()));
+        assertThat(request.getSession().getAttribute(CasdoorSessionLogout.SESSION_TOKEN)).isSameAs(token);
+    }
+
+    @Test
     void successHandler_appliesSubPathPrefixExactlyOnce() throws Exception {
         OAuthLoginFlowService oauthLoginFlowService = mock(OAuthLoginFlowService.class);
         OAuth2LoginSuccessHandler handler = new OAuth2LoginSuccessHandler(
                 new com.iflytek.skillhub.auth.session.PlatformSessionService(),
-                oauthLoginFlowService
+                oauthLoginFlowService, new CasdoorRegistration("oidc")
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
         // X-Forwarded-Prefix is reflected into the context path under forward-headers-strategy=framework.
@@ -119,7 +136,7 @@ class OAuth2LoginHandlersTest {
         OAuthLoginFlowService oauthLoginFlowService = mock(OAuthLoginFlowService.class);
         OAuth2LoginSuccessHandler handler = new OAuth2LoginSuccessHandler(
                 new com.iflytek.skillhub.auth.session.PlatformSessionService(),
-                oauthLoginFlowService
+                oauthLoginFlowService, new CasdoorRegistration("oidc")
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod("GET");

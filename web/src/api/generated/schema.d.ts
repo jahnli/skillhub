@@ -12258,6 +12258,11 @@ export interface components {
             displayName?: string;
             avatarUrl?: string;
             email?: string;
+            company?: string | null;
+            department?: string | null;
+            employeeNumber?: string | null;
+            jobTitle?: string | null;
+            phone?: string | null;
             pendingChanges?: components["schemas"]["PendingChangesResponse"];
             fieldPolicies?: {
                 [key: string]: components["schemas"]["FieldPolicyResponse"];
@@ -12609,6 +12614,7 @@ export interface components {
             id?: string;
             name?: string;
             authorizationUrl?: string;
+            silentSignIn?: boolean;
         };
         ApiResponseListAuthMethodResponse: {
             /** Format: int32 */

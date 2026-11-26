@@ -1868,6 +1868,11 @@
     "nextPage": "下一页"
   },
   "profile": {
+    "company": "公司",
+    "department": "部门",
+    "employeeNumber": "工号",
+    "jobTitle": "岗位",
+    "phone": "手机号",
     "title": "个人设置",
     "subtitle": "管理你的昵称和个人信息。",
     "displayName": "昵称",

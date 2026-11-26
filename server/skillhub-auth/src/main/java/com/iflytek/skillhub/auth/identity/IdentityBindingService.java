@@ -4,6 +4,7 @@ import com.iflytek.skillhub.auth.entity.IdentityBinding;
 import com.iflytek.skillhub.auth.oauth.AccountDisabledException;
 import com.iflytek.skillhub.auth.oauth.AccountMergedException;
 import com.iflytek.skillhub.auth.oauth.AccountPendingException;
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.SystemAccountLoginException;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
@@ -25,6 +26,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionOperations;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.util.UUID;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +43,7 @@ public class IdentityBindingService {
     private final GlobalNamespaceMembershipService globalNamespaceMembershipService;
     private final ApplicationEventPublisher eventPublisher;
     private final TransactionOperations transactions;
+    private final CasdoorRegistration casdoorRegistration;
     private final InitialExternalRoleGrantService initialRoleGrants;
 
     @Autowired
@@ -50,10 +53,11 @@ public class IdentityBindingService {
                                   GlobalNamespaceMembershipService globalNamespaceMembershipService,
                                   ApplicationEventPublisher eventPublisher,
                                   PlatformTransactionManager transactionManager,
-                                  InitialExternalRoleGrantService initialRoleGrants) {
+                                  InitialExternalRoleGrantService initialRoleGrants,
+                                  CasdoorRegistration casdoorRegistration) {
         this(bindingRepo, userRepo, roleBindingRepo, globalNamespaceMembershipService, eventPublisher,
                 initialRoleGrants,
-                requiresNewTransactions(transactionManager));
+                requiresNewTransactions(transactionManager), casdoorRegistration);
     }
 
     IdentityBindingService(IdentityBindingRepository bindingRepo,
@@ -62,13 +66,15 @@ public class IdentityBindingService {
                            GlobalNamespaceMembershipService globalNamespaceMembershipService,
                            ApplicationEventPublisher eventPublisher,
                            InitialExternalRoleGrantService initialRoleGrants,
-                           TransactionOperations transactions) {
+                           TransactionOperations transactions,
+                           CasdoorRegistration casdoorRegistration) {
         this.bindingRepo = bindingRepo;
         this.userRepo = userRepo;
         this.roleBindingRepo = roleBindingRepo;
         this.globalNamespaceMembershipService = globalNamespaceMembershipService;
         this.eventPublisher = eventPublisher;
         this.transactions = transactions;
+        this.casdoorRegistration = casdoorRegistration;
         this.initialRoleGrants = initialRoleGrants;
     }
 
@@ -94,11 +100,7 @@ public class IdentityBindingService {
             user = userRepo.findLockedFreshById(binding.getUserId())
                 .orElseThrow(() -> new IllegalStateException("User not found for binding"));
             ensureExternalLoginAllowed(user);
-            user.setDisplayName(claims.providerLogin());
-            if (trustedEmail(claims) != null) user.setEmail(claims.email());
-            if (claims.extra().get("avatar_url") != null) {
-                user.setAvatarUrl((String) claims.extra().get("avatar_url"));
-            }
+            updateReturningProfile(user, claims);
             user = userRepo.save(user);
         } else {
             user = new UserAccount(
@@ -108,6 +110,7 @@ public class IdentityBindingService {
                 (String) claims.extra().get("avatar_url")
             );
             user.setStatus(initialStatus);
+            updateCasdoorProfile(user, claims);
             user = userRepo.save(user);
 
             binding = new IdentityBinding(user.getId(), claims.provider(), claims.subject(), claims.providerLogin());
@@ -174,9 +177,14 @@ public class IdentityBindingService {
         if (binding == null) {
             return null;
         }
-        UserAccount user = userRepo.findById(binding.getUserId())
+        boolean casdoor = casdoorRegistration.matches(claims.provider());
+        UserAccount user = (casdoor ? userRepo.findLockedFreshById(binding.getUserId()) : userRepo.findById(binding.getUserId()))
                 .orElseThrow(() -> new IllegalStateException("User not found for binding"));
         ensureExternalLoginAllowed(user);
+        if (casdoor) {
+            updateReturningProfile(user, claims);
+            userRepo.save(user);
+        }
         Set<String> roles = roleBindingRepo.findByUserId(user.getId()).stream()
                 .map(rb -> rb.getRole().getCode())
                 .collect(Collectors.toSet());
@@ -201,6 +209,36 @@ public class IdentityBindingService {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         return template;
+    }
+
+    private void updateReturningProfile(UserAccount user, OAuthClaims claims) {
+        if (trustedEmail(claims) != null) user.setEmail(claims.email());
+        if (casdoorRegistration.matches(claims.provider())) {
+            updateCasdoorProfile(user, claims);
+        } else {
+            user.setDisplayName(claims.providerLogin());
+            if (claims.extra().get("avatar_url") != null) {
+                user.setAvatarUrl((String) claims.extra().get("avatar_url"));
+            }
+        }
+    }
+
+    private void updateCasdoorProfile(UserAccount user, OAuthClaims claims) {
+        if (!casdoorRegistration.matches(claims.provider())) return;
+        var attributes = claims.extra();
+        var properties = attributes.get("properties") instanceof Map<?, ?> nested ? nested : Map.of();
+        String name = text(attributes.get("displayName"));
+        if (name == null) name = text(attributes.get("name"));
+        if (name != null) user.setDisplayName(name);
+        String avatar = text(attributes.get("avatar"));
+        if (avatar == null) avatar = text(attributes.get("avatar_url"));
+        if (avatar != null) user.setAvatarUrl(avatar);
+        user.updateEmployeeProfile(text(attributes.get("affiliation")), text(properties.get("department")),
+                text(properties.get("job_number")), text(properties.get("job_type")), text(attributes.get("phone")));
+    }
+
+    private static String text(Object value) {
+        return value instanceof String s && !s.isBlank() ? s.strip() : null;
     }
 
     private String trustedEmail(OAuthClaims claims) {

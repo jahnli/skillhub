@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.controller;
 
+import com.iflytek.skillhub.auth.oauth.OAuthLoginRedirectSupport;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.local.LocalCredentialRepository;
 import com.iflytek.skillhub.auth.settings.LocalAuthSettings;
@@ -76,6 +77,15 @@ class AuthControllerTest {
     @org.junit.jupiter.api.BeforeEach
     void localAuthEnabled() {
         given(localAuthSettingsService.current()).willReturn(new LocalAuthSettings(1L, true, true, 0L, null));
+    }
+
+    @Test
+    void loginCallbackRequiresAnOAuthAuthorizationRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/login/callback")
+                        .sessionAttr(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE, "/skills")
+                        .param("code", "unused").param("state", "missing-session"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", "/login?returnTo=%2Fskills"));
     }
 
     @Test

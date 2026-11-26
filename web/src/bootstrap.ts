@@ -49,6 +49,13 @@ void (async () => {
     ensureRuntimeConfigFallback()
   }
 
+  const { getCasdoorSignInUrl } = await import('./features/auth/casdoor-session')
+  const signInUrl = await getCasdoorSignInUrl()
+  if (signInUrl) {
+    window.location.replace(signInUrl)
+    return
+  }
+
   await import('./main')
   const { router } = await import('./app/router')
   const root = document.getElementById('root')

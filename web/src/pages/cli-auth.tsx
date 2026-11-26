@@ -51,7 +51,7 @@ export function CliAuthPage() {
 
   const { data: user, isError: userError } = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: getCurrentUser,
+    queryFn: () => getCurrentUser(),
     retry: false,
   })
   const { mutateAsync: createToken } = useMutation({ mutationFn: tokenApi.createToken, retry: false })

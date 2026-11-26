@@ -15,8 +15,10 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => vi.fn(),
 }))
 
+const { cachedProfile } = vi.hoisted(() => ({ cachedProfile: { data: null as Record<string, string> | null } }))
+
 vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: null }),
+  useQuery: () => cachedProfile,
   useQueryClient: () => ({ invalidateQueries: vi.fn(), setQueryData: vi.fn() }),
 }))
 
@@ -62,6 +64,16 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { ProfileSettingsPage } from './profile'
 
 describe('ProfileSettingsPage', () => {
+  it('shows employee fields from the self-profile response', () => {
+    cachedProfile.data = { company: 'Example', department: 'Operations', employeeNumber: '00123', jobTitle: 'Engineer', phone: '+86-123' }
+    try {
+      const html = renderToStaticMarkup(React.createElement(ProfileSettingsPage))
+      for (const value of Object.values(cachedProfile.data)) expect(html).toContain(value)
+    } finally {
+      cachedProfile.data = null
+    }
+  })
+
   it('exports a named component function', () => {
     expect(typeof ProfileSettingsPage).toBe('function')
   })

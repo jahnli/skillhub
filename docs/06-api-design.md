@@ -159,6 +159,9 @@ Public API 的可见性规则：
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/oauth2/authorization/github` | 发起 GitHub OAuth 登录（Spring Security 内置） |
+| GET | `/api/v1/auth/login/callback` | Casdoor 登录回调，交由 Spring Security 验证授权响应 |
+| POST | `/api/v1/auth/back-channel-logout` | 接收 Casdoor 的服务端登出通知，撤销匹配会话 |
+| GET | `/api/v1/auth/logout/callback` | Casdoor 退出后返回首页 |
 | GET | `/login/oauth2/code/github` | GitHub OAuth 回调（Spring Security 内置） |
 | GET | `/api/v1/auth/me` | 当前用户信息（未登录返回 401） |
 | POST | `/api/v1/auth/logout` | 登出（清除 Session） |

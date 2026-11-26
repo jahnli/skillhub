@@ -737,9 +737,9 @@ function trimTrailingSlash(value: string): string {
   return value
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(options?: Pick<RequestWithTimeout, 'timeoutMs'>): Promise<User | null> {
   try {
-    const user = await fetchJson<User>('/api/v1/auth/me')
+    const user = await fetchJson<User>('/api/v1/auth/me', options)
     return {
       ...user,
       userId: user.userId ?? '',
@@ -761,9 +761,9 @@ export const authApi = {
     return fetchJson<LocalAuthCapabilities>('/api/v1/auth/local/capabilities')
   },
 
-  async getProviders(returnTo?: string): Promise<OAuthProvider[]> {
+  async getProviders(returnTo?: string, options?: Pick<RequestWithTimeout, 'timeoutMs'>): Promise<OAuthProvider[]> {
     const params = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''
-    const providers = await fetchJson<OAuthProvider[]>(`/api/v1/auth/providers${params}`)
+    const providers = await fetchJson<OAuthProvider[]>(`/api/v1/auth/providers${params}`, options)
     return providers
       .filter((provider) => provider.id && provider.name && provider.authorizationUrl)
       .map((provider) => ({
@@ -847,6 +847,17 @@ export const authApi = {
     if (response.status !== 200 && response.status !== 204) {
       throw new Error(`HTTP ${response.status}`)
     }
+  },
+
+  async logoutWithProvider(): Promise<string | null> {
+    const response = await fetch(buildApiUrl('/api/v1/auth/logout?federated=true'), {
+      method: 'POST',
+      headers: await ensureCsrfHeaders(),
+    })
+    if (response.status !== 204) {
+      throw new ApiError(`HTTP ${response.status}`, response.status)
+    }
+    return response.headers.get('X-SkillHub-Logout-Url')
   },
 
   async bootstrapSession(provider: string): Promise<User> {
@@ -2054,7 +2065,8 @@ export const meApi = {
 }
 
 export const profileApi = {
-  async getProfile(): Promise<{
+  async getProfile(): Promise<Pick<components['schemas']['UserProfileResponse'],
+    'company' | 'department' | 'employeeNumber' | 'jobTitle' | 'phone'> & {
     displayName: string
     avatarUrl: string | null
     email: string | null

@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.auth.config;
 
+import com.iflytek.skillhub.auth.oauth.CasdoorSessionLogout;
 import com.iflytek.skillhub.auth.oauth.CustomOAuth2UserService;
 import com.iflytek.skillhub.auth.oauth.CustomOidcUserService;
 import com.iflytek.skillhub.auth.oauth.DispatchingTokenResponseClient;
@@ -24,7 +25,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,6 +36,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
@@ -115,7 +120,7 @@ public class SecurityConfig {
      * CSRF rules for browser traffic, and method-level authorization.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CasdoorSessionLogout casdoorLogout) throws Exception {
         var csrfHandler = new CsrfTokenRequestAttributeHandler();
         csrfHandler.setCsrfRequestAttributeName(null);
         RequestMatcher csrfIgnoreMatcher = request -> {
@@ -128,7 +133,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(csrfHandler)
-                .ignoringRequestMatchers(csrfIgnoreMatcher)
+                .ignoringRequestMatchers(csrfIgnoreMatcher, CasdoorSessionLogout.BACK_CHANNEL)
             )
             .authorizeHttpRequests(auth -> {
                 configureRoutePolicies(auth);
@@ -136,6 +141,15 @@ public class SecurityConfig {
             })
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(authorizationRequestResolver))
+                .withObjectPostProcessor(new ObjectPostProcessor<OAuth2LoginAuthenticationFilter>() {
+                    @Override
+                    public <O extends OAuth2LoginAuthenticationFilter> O postProcess(O filter) {
+                        filter.setRequiresAuthenticationRequestMatcher(new OrRequestMatcher(
+                                new AntPathRequestMatcher(OAuth2LoginAuthenticationFilter.DEFAULT_FILTER_PROCESSES_URI),
+                                new AntPathRequestMatcher(CasdoorSessionLogout.LOGIN_CALLBACK, "GET")));
+                        return filter;
+                    }
+                })
                 .tokenEndpoint(token -> token.accessTokenResponseClient(tokenResponseClient))
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
@@ -169,10 +183,19 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/api/v1/auth/logout")
+                .addLogoutHandler((request, response, authentication) -> casdoorLogout.prepareBrowserLogout(request, authentication))
                 // Redirect to the deployment root honoring any sub-path prefix (X-Forwarded-Prefix
                 // is reflected into the context path), so logout does not escape a sub-path deployment.
                 .logoutSuccessHandler((request, response, authentication) -> {
                     String contextPath = request.getContextPath();
+                    if ("true".equals(request.getParameter("federated"))) {
+                        Object redirect = request.getAttribute(CasdoorSessionLogout.BROWSER_REDIRECT);
+                        if (redirect instanceof String url) {
+                            response.setHeader("X-SkillHub-Logout-Url", url);
+                        }
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                        return;
+                    }
                     response.sendRedirect(((contextPath == null) ? "" : contextPath) + "/");
                 })
                 .invalidateHttpSession(true)
@@ -180,6 +203,7 @@ public class SecurityConfig {
             )
             .addFilterBefore(new ExpiredPublicSessionFilter(
                     routeSecurityPolicyRegistry, corruptSessionRemover, sessionCookieName), CsrfFilter.class)
+            .addFilterBefore(casdoorLogout.filter(), LogoutFilter.class)
             .addFilterBefore(apiTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(apiTokenScopeFilter, ApiTokenAuthenticationFilter.class);
 

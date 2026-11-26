@@ -13,6 +13,7 @@ import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
 import com.iflytek.skillhub.auth.identity.IdentityBindingService;
 import com.iflytek.skillhub.auth.local.LocalCredential;
 import com.iflytek.skillhub.auth.local.LocalCredentialRepository;
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.settings.ExternalRoleGrantRule;
@@ -285,7 +286,7 @@ class SystemAuthSettingsPostgresTest {
         return new IdentityBindingService(identities, users, userRoles,
                 mock(GlobalNamespaceMembershipService.class), mock(ApplicationEventPublisher.class),
                 transactionManager, new InitialExternalRoleGrantService(
-                        rules, userRoles, new AuditLogService(auditLogs, Clock.systemUTC())));
+                        rules, userRoles, new AuditLogService(auditLogs, Clock.systemUTC())), new CasdoorRegistration("casdoor"));
     }
 
     private static PlatformPrincipal firstLogin(IdentityBindingService service, OAuthClaims claims,

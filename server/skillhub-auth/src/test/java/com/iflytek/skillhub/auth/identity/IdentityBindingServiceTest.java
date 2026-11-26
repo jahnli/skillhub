@@ -16,6 +16,7 @@ import com.iflytek.skillhub.auth.entity.Role;
 import com.iflytek.skillhub.auth.entity.UserRoleBinding;
 import com.iflytek.skillhub.auth.oauth.AccountDisabledException;
 import com.iflytek.skillhub.auth.oauth.AccountMergedException;
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.AccountPendingException;
 import com.iflytek.skillhub.auth.oauth.SystemAccountLoginException;
@@ -70,7 +71,55 @@ class IdentityBindingServiceTest {
     void setUp() {
         service = new IdentityBindingService(bindingRepo, userRepo, roleBindingRepo,
                 globalNamespaceMembershipService, eventPublisher, initialRoleGrants,
-                new ImmediateTransactionOperations());
+                new ImmediateTransactionOperations(), new CasdoorRegistration("oidc"));
+    }
+
+    @Test
+    void employeeFieldsFromAnotherProviderDoNotOverwriteCasdoorData() {
+        UserAccount employee = new UserAccount("usr_1", "Alice", null, null);
+        employee.updateEmployeeProfile("Example", "Research", "00123", "Engineer", "+86-123");
+        when(bindingRepo.findByProviderCodeAndSubject("github", "sub"))
+                .thenReturn(Optional.of(new IdentityBinding("usr_1", "github", "sub", "alice")));
+        when(userRepo.findLockedFreshById("usr_1")).thenReturn(Optional.of(employee));
+        when(userRepo.save(employee)).thenReturn(employee);
+        service.bindOrCreate(new OAuthClaims("github", "sub", null, false, "alice",
+                Map.of("affiliation", "Other", "properties", Map.of("department", "Other"))), UserStatus.ACTIVE);
+        assertThat(employee.getCompany()).isEqualTo("Example");
+        assertThat(employee.getDepartment()).isEqualTo("Research");
+    }
+
+    @Test
+    void casdoorImportsEmployeeProfileAndRefreshesSameUserOnNextLogin() {
+        OAuthClaims first = new OAuthClaims("oidc", "subject-1", "user@example.test", true, "login-id",
+                Map.of("name", "Employee One", "affiliation", "Example", "phone", "+86-123",
+                        "avatar", "https://example.test/one.png", "properties", Map.of(
+                                "department", "Research", "job_number", "00123", "job_type", "Engineer")));
+        when(userRepo.save(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        PlatformPrincipal principal = service.bindOrCreate(first, UserStatus.ACTIVE);
+        var captured = ArgumentCaptor.forClass(UserAccount.class);
+        verify(userRepo).save(captured.capture());
+        UserAccount employee = captured.getValue();
+        assertThat(employee.getCompany()).isEqualTo("Example");
+        assertThat(employee.getDepartment()).isEqualTo("Research");
+        assertThat(employee.getEmployeeNumber()).isEqualTo("00123");
+        assertThat(employee.getJobTitle()).isEqualTo("Engineer");
+        assertThat(employee.getPhone()).isEqualTo("+86-123");
+        assertThat(principal.displayName()).isEqualTo("Employee One");
+        assertThat(principal.avatarUrl()).isEqualTo("https://example.test/one.png");
+
+        when(bindingRepo.findByProviderCodeAndSubject("oidc", "subject-1"))
+                .thenReturn(Optional.of(new IdentityBinding(principal.userId(), "oidc", "subject-1", "login-id")));
+        when(userRepo.findLockedFreshById(principal.userId())).thenReturn(Optional.of(employee));
+        OAuthClaims next = new OAuthClaims("oidc", "subject-1", null, false, "login-id",
+                Map.of("phone", " ", "properties", Map.of("department", "Operations")));
+        PlatformPrincipal updated = service.bindOrCreate(next, UserStatus.ACTIVE);
+        assertThat(updated.userId()).isEqualTo(principal.userId());
+        assertThat(updated.displayName()).isEqualTo("Employee One");
+        assertThat(updated.email()).isEqualTo("user@example.test");
+        assertThat(employee.getDepartment()).isEqualTo("Operations");
+        assertThat(employee.getEmployeeNumber()).isEqualTo("00123");
+        assertThat(employee.getPhone()).isEqualTo("+86-123");
+        verify(bindingRepo).saveAndFlush(any(IdentityBinding.class));
     }
 
     @Test

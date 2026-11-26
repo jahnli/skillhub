@@ -87,13 +87,18 @@ export default defineConfig({
       interval: 150,
     },
     proxy: {
+      // Spring builds OAuth redirects from the browser-facing host and port.
+      '/api/v1/auth/': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+      },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/oauth2': {
         target: 'http://localhost:8080',
-        changeOrigin: true,
+        changeOrigin: false,
       },
       '/login/oauth2': {
         target: 'http://localhost:8080',

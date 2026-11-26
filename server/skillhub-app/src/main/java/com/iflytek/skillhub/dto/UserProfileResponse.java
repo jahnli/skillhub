@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 
 /**
@@ -18,6 +19,11 @@ public record UserProfileResponse(
         String displayName,
         String avatarUrl,
         String email,
+        @Schema(nullable = true) String company,
+        @Schema(nullable = true) String department,
+        @Schema(nullable = true) String employeeNumber,
+        @Schema(nullable = true) String jobTitle,
+        @Schema(nullable = true) String phone,
         PendingChangesResponse pendingChanges,
         Map<String, FieldPolicyResponse> fieldPolicies
 ) {}

@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.service;
 
+import com.iflytek.skillhub.auth.oauth.CasdoorRegistration;
 import com.iflytek.skillhub.auth.settings.LocalAuthSettingsService;
 import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
@@ -31,12 +32,15 @@ public class AuthMethodCatalog {
     private final List<PassiveSessionAuthenticator> passiveSessionAuthenticators;
     private final LocalAuthSettingsService authSettings;
 
+    private final CasdoorRegistration casdoor;
+
     public AuthMethodCatalog(OAuth2ClientProperties oAuth2ClientProperties,
                              DirectAuthProperties directAuthProperties,
                              AuthSessionBootstrapProperties sessionBootstrapProperties,
                              List<DirectAuthProvider> directAuthProviders,
                              List<PassiveSessionAuthenticator> passiveSessionAuthenticators,
-                             LocalAuthSettingsService authSettings) {
+                             LocalAuthSettingsService authSettings, CasdoorRegistration casdoor) {
+        this.casdoor = casdoor;
         this.oAuth2ClientProperties = oAuth2ClientProperties;
         this.directAuthProperties = directAuthProperties;
         this.sessionBootstrapProperties = sessionBootstrapProperties;
@@ -55,7 +59,8 @@ public class AuthMethodCatalog {
                 entry.getValue().getClientName() != null && !entry.getValue().getClientName().isBlank()
                     ? entry.getValue().getClientName()
                     : entry.getKey(),
-                buildAuthorizationUrl(entry.getKey(), sanitizedReturnTo)
+                buildAuthorizationUrl(entry.getKey(), sanitizedReturnTo),
+                casdoor.matches(entry.getKey())
             ))
             .toList());
     }
