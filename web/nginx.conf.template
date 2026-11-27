@@ -52,6 +52,11 @@ server {
     }
 
     location /api/ {
+        # Federated logout returns the provider URL and ID token hint in a response header.
+        proxy_buffer_size 16k;
+        proxy_buffers 8 16k;
+        proxy_busy_buffers_size 16k;
+
         proxy_pass $skillhub_api_upstream;
         proxy_set_header Host $skillhub_forwarded_host;
         proxy_set_header Forwarded "";
