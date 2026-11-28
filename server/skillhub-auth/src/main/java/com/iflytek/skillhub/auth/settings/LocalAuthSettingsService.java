@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 public class LocalAuthSettingsService {
     public static final String SETTING_KEY = "auth.local";
     public static final String PASSWORD_LOGIN_KEY = "passwordLoginEnabled";
-    public static final String SELF_REGISTRATION_KEY = "selfRegistrationEnabled";
+    // Accept the retired property only when reading settings persisted by older releases.
+    private static final String LEGACY_REGISTRATION_KEY = "selfRegistrationEnabled";
 
     private final SystemSettingRepository repository;
 
@@ -28,12 +29,12 @@ public class LocalAuthSettingsService {
         }
         Map<String, Object> value = setting.getValue();
         if (!(value.get(PASSWORD_LOGIN_KEY) instanceof Boolean passwordLoginEnabled)
-                || !(value.get(SELF_REGISTRATION_KEY) instanceof Boolean selfRegistrationEnabled)
-                || value.size() != 2) {
+                || !(value.size() == 1 || (value.size() == 2
+                    && value.get(LEGACY_REGISTRATION_KEY) instanceof Boolean))) {
             throw unavailable();
         }
         return new LocalAuthSettings(setting.getId(), passwordLoginEnabled,
-                selfRegistrationEnabled, setting.getVersion(), setting.getUpdatedAt());
+                setting.getVersion(), setting.getUpdatedAt());
     }
 
     private AuthFlowException unavailable() {
@@ -43,12 +44,6 @@ public class LocalAuthSettingsService {
     public void requirePasswordLogin() {
         if (!current().passwordLoginEnabled()) {
             throw new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.login.disabled");
-        }
-    }
-
-    public void requireSelfRegistration() {
-        if (!current().registrationAvailable()) {
-            throw new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.registration.disabled");
         }
     }
 }

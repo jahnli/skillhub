@@ -10,8 +10,8 @@ export const CONSOLE_SIDEBAR_ROW_CLASS_NAME = 'flex flex-col lg:flex-row gap-0 [
 export const CONSOLE_SIDEBAR_CONTENT_CLASS_NAME = 'flex-1 min-w-0 pb-7 pt-[18px] lg:pl-10 lg:pt-9'
 
 export const DASHBOARD_PATH_PREFIXES = ['/dashboard', '/settings/'] as const
-export const AUTH_ENTRY_PATHS = ['/login', '/register', '/reset-password'] as const
-export const SPLIT_AUTH_PATHS = ['/login', '/register'] as const
+export const AUTH_ENTRY_PATHS = ['/login', '/reset-password'] as const
+export const SPLIT_AUTH_PATHS = ['/login'] as const
 
 interface AppMainContentLayout {
   mainClassName: string

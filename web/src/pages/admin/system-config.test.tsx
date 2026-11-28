@@ -42,7 +42,7 @@ describe('SystemConfigPage', () => {
   })
 
   function setup(ruleList: unknown[] = []) {
-    api.getLocalAuth.mockResolvedValue({ passwordLoginEnabled: true, selfRegistrationEnabled: true, version: 3 })
+    api.getLocalAuth.mockResolvedValue({ passwordLoginEnabled: true, version: 3 })
     api.listRoles.mockResolvedValue([{ code: 'SUPER_ADMIN', name: 'Super Admin' }, { code: 'USER', name: 'User' }])
     api.listRoleGrants.mockResolvedValue(ruleList)
     api.getAvatarReview.mockResolvedValue({ machineEnabled: false, manualEnabled: true, version: 0 })
@@ -53,7 +53,7 @@ describe('SystemConfigPage', () => {
   }
 
   it('stages changes, allows discard, and confirms lockout before saving the observed version', async () => {
-    api.updateLocalAuth.mockResolvedValue({ passwordLoginEnabled: false, selfRegistrationEnabled: true, version: 4 })
+    api.updateLocalAuth.mockResolvedValue({ passwordLoginEnabled: false, version: 4 })
     const client = setup()
     const checkbox = await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' })
     fireEvent.click(checkbox)
@@ -70,19 +70,16 @@ describe('SystemConfigPage', () => {
     fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
     await waitFor(() => expect(api.updateLocalAuth.mock.calls[0]?.[0]).toEqual({
       passwordLoginEnabled: false,
-      selfRegistrationEnabled: true,
       version: 3,
     }))
     await waitFor(() => expect(client.getQueryData(['auth', 'local-capabilities'])).toEqual({
       passwordLoginEnabled: false,
-      selfRegistrationEnabled: true,
-      registrationAvailable: false,
     }))
   })
 
   it('keeps the confirmation open when saving fails so the administrator can retry', async () => {
     api.updateLocalAuth.mockRejectedValueOnce(new Error('Version conflict'))
-      .mockResolvedValueOnce({ passwordLoginEnabled: false, selfRegistrationEnabled: true, version: 4 })
+      .mockResolvedValueOnce({ passwordLoginEnabled: false, version: 4 })
     setup()
     const checkbox = await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' })
     fireEvent.click(checkbox)
@@ -95,8 +92,8 @@ describe('SystemConfigPage', () => {
   })
 
   it('reloads current settings after a concurrent administrator changes them', async () => {
-    api.getLocalAuth.mockResolvedValueOnce({ passwordLoginEnabled: true, selfRegistrationEnabled: true, version: 3 })
-      .mockResolvedValueOnce({ passwordLoginEnabled: true, selfRegistrationEnabled: false, version: 4 })
+    api.getLocalAuth.mockResolvedValueOnce({ passwordLoginEnabled: true, version: 3 })
+      .mockResolvedValueOnce({ passwordLoginEnabled: true, version: 4 })
     api.updateLocalAuth.mockRejectedValue(new ApiError('Version conflict', 409))
     setup()
     fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' }))
@@ -105,20 +102,14 @@ describe('SystemConfigPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect((await screen.findByRole('alert')).textContent).toBe('systemConfig.changedElsewhere')
     expect(screen.getByRole('switch', { name: 'systemConfig.passwordLogin' }).getAttribute('aria-checked')).toBe('true')
-    expect(screen.getByRole('switch', { name: 'systemConfig.selfRegistration' }).getAttribute('aria-checked')).toBe('false')
     expect(api.updateLocalAuth).toHaveBeenCalledTimes(1)
   })
 
-  it('saves a registration change only after Save, without a lockout confirmation', async () => {
-    api.updateLocalAuth.mockResolvedValue({ passwordLoginEnabled: true, selfRegistrationEnabled: false, version: 4 })
+  it('only exposes the password login setting and has no registration switch', async () => {
     setup()
-    fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.selfRegistration' }))
-    expect(api.updateLocalAuth).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'systemConfig.saveChanges' }))
-    await waitFor(() => expect(api.updateLocalAuth.mock.calls[0]?.[0]).toEqual({
-      passwordLoginEnabled: true, selfRegistrationEnabled: false, version: 3,
-    }))
-    expect(screen.queryByRole('dialog')).toBeNull()
+    await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' })
+    expect(screen.queryByRole('switch', { name: 'systemConfig.selfRegistration' })).toBeNull()
+    expect(screen.queryByText('systemConfig.registrationRequiresLogin')).toBeNull()
   })
 
   it('locks the confirmation while a change is being saved', async () => {
@@ -134,7 +125,7 @@ describe('SystemConfigPage', () => {
     expect((within(dialog).getByRole('button', { name: 'dialog.cancel' }) as HTMLButtonElement).disabled).toBe(true)
     fireEvent.click(processing)
     await waitFor(() => expect(api.updateLocalAuth).toHaveBeenCalledTimes(1))
-    resolveSave({ passwordLoginEnabled: false, selfRegistrationEnabled: true, version: 4 })
+    resolveSave({ passwordLoginEnabled: false, version: 4 })
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
 
@@ -163,16 +154,16 @@ describe('SystemConfigPage', () => {
   })
   it('confirms section departure, preserves edits on cancel and discards them on leave', async () => {
     setup()
-    fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.selfRegistration' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' }))
     fireEvent.click(screen.getByRole('button', { name: 'recommendations.navigation.operations' }))
     let dialog = await screen.findByRole('dialog', { name: 'sitePresentation.leaveTitle' })
     fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.cancel' }))
-    expect(screen.getByRole('switch', { name: 'systemConfig.selfRegistration' }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('switch', { name: 'systemConfig.passwordLogin' }).getAttribute('aria-checked')).toBe('false')
     fireEvent.click(screen.getByRole('button', { name: 'recommendations.navigation.operations' }))
     dialog = await screen.findByRole('dialog')
     fireEvent.click(within(dialog).getByRole('button', { name: 'sitePresentation.leaveConfirm' }))
     fireEvent.click(screen.getByRole('button', { name: 'recommendations.navigation.access' }))
-    expect(screen.getByRole('switch', { name: 'systemConfig.selfRegistration' }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('switch', { name: 'systemConfig.passwordLogin' }).getAttribute('aria-checked')).toBe('true')
     expect(api.updateLocalAuth).not.toHaveBeenCalled()
   })
 

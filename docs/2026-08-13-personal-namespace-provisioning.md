@@ -17,15 +17,14 @@
 
 ### 触发时机
 
-在账号**第一次变得可用**时触发，共三处，均发布 `UserActivatedEvent`：
+在账号**第一次变得可用**时触发。自助注册移除后，以下两处继续发布 `UserActivatedEvent`：
 
 | 入口 | 位置 |
 |------|------|
-| 本地注册 | `LocalAuthService.register` |
 | 外部身份首次登录 | `IdentityBindingService.bindOrCreate`（仅 `initialStatus == ACTIVE`） |
 | 管理员审批 / 解封 | `AdminUserAppService.updateUserStatus`（仅从非 ACTIVE 转为 ACTIVE） |
 
-第三处不可省略：开启了准入审批的部署里，用户在 OAuth 首次尝试时就以 `PENDING` 建号，
+管理员审批 / 解封入口不可省略：开启了准入审批的部署里，用户在 OAuth 首次尝试时就以 `PENDING` 建号，
 真正可用是在管理员审批那一刻。
 
 ### 为什么走事件 + AFTER_COMMIT

@@ -36,6 +36,7 @@ interface AuthMethodButtonListProps {
   isLoading?: boolean
   compact?: boolean
   emptyFallback?: React.ReactNode
+  layout?: 'grid' | 'stack'
 }
 
 /**
@@ -46,14 +47,17 @@ export function AuthMethodButtonList({
   isLoading = false,
   compact = false,
   emptyFallback = null,
+  layout = 'grid',
 }: AuthMethodButtonListProps) {
   const { t } = useTranslation()
   const providers = (methods ?? []).filter((method) => method.methodType === 'OAUTH_REDIRECT')
+  const isStack = layout === 'stack'
+  const containerClassName = isStack ? 'grid min-w-0 grid-cols-1 gap-2' : compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'space-y-3'
 
   if (isLoading) {
     return (
-      <div className={cn(compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'space-y-3')}>
-        <Button className="h-12" disabled variant="outline">
+      <div className={containerClassName}>
+        <Button className={isStack ? 'w-full' : 'h-12'} disabled variant="outline">
           <div className={cn('rounded-full animate-shimmer', compact ? 'h-4 w-4' : 'mr-3 h-5 w-5')} />
           {compact ? t('loginButton.loadingShort') : t('loginButton.loading')}
         </Button>
@@ -66,12 +70,12 @@ export function AuthMethodButtonList({
   }
 
   return (
-    <div className={cn(compact ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'space-y-3')}>
+    <div className={containerClassName}>
       {providers.map((provider) => (
         <Button data-analytics-id="auth.oauth.request"
           key={provider.id}
           className={cn(
-            compact ? 'h-11 justify-center px-2 text-sm xl:h-10' : 'w-full h-12 text-base',
+            isStack ? 'h-auto min-h-[var(--control-height)] min-w-0 w-full whitespace-normal py-1.5' : compact ? 'h-11 justify-center px-2 text-sm xl:h-10' : 'w-full h-12 text-base',
           )}
           variant="outline"
           onClick={() => {
@@ -79,7 +83,7 @@ export function AuthMethodButtonList({
           }}
         >
           <OAuthIcon provider={provider.provider} compact={compact} />
-          <span className={compact ? 'truncate' : undefined}>
+          <span className={isStack ? 'min-w-0 [overflow-wrap:anywhere]' : compact ? 'truncate' : undefined}>
             {compact ? provider.displayName : t('loginButton.loginWith', { name: provider.displayName })}
           </span>
         </Button>

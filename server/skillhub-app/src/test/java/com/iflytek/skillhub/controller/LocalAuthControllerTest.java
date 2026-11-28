@@ -68,24 +68,60 @@ class LocalAuthControllerTest {
 
     @org.junit.jupiter.api.BeforeEach
     void localAuthEnabled() {
-        given(localAuthSettingsService.current()).willReturn(new LocalAuthSettings(1L, true, true, 0L, null));
+        given(localAuthSettingsService.current()).willReturn(new LocalAuthSettings(1L, true, 0L, null));
     }
 
     @ParameterizedTest
-    @CsvSource({"true,true,true", "true,false,false", "false,true,false", "false,false,false"})
-    void publicCapabilitiesReflectBothSettingsWithoutExposingInternalFields(
-            boolean passwordLogin, boolean selfRegistration, boolean registrationAvailable) throws Exception {
+    @CsvSource({"true", "false"})
+    void publicCapabilitiesReflectPasswordLoginWithoutExposingRetiredOrInternalFields(
+            boolean passwordLogin) throws Exception {
         given(localAuthSettingsService.current()).willReturn(
-                new LocalAuthSettings(1L, passwordLogin, selfRegistration, 7L, null));
+                new LocalAuthSettings(1L, passwordLogin, 7L, null));
 
         mockMvc.perform(get("/api/v1/auth/local/capabilities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.passwordLoginEnabled").value(passwordLogin))
-                .andExpect(jsonPath("$.data.selfRegistrationEnabled").value(selfRegistration))
-                .andExpect(jsonPath("$.data.registrationAvailable").value(registrationAvailable))
+                .andExpect(jsonPath("$.data.selfRegistrationEnabled").doesNotExist())
+                .andExpect(jsonPath("$.data.registrationAvailable").doesNotExist())
                 .andExpect(jsonPath("$.data.version").doesNotExist());
     }
 
+
+    @Test
+    void openApiDoesNotExposeSelfRegistration() throws Exception {
+        byte[] bytes = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        var document = new com.fasterxml.jackson.databind.ObjectMapper().readTree(bytes);
+        org.assertj.core.api.Assertions.assertThat(document.path("paths").size()).isGreaterThan(200);
+        org.assertj.core.api.Assertions.assertThat(document.path("paths")
+                .has("/api/v1/auth/local/register")).isFalse();
+        var schemas = document.path("components").path("schemas");
+        org.assertj.core.api.Assertions.assertThat(schemas.has("LocalRegisterRequest")).isFalse();
+        for (String name : List.of("LocalAuthCapabilitiesResponse", "SystemAuthSettingsResponse",
+                "SystemAuthSettingsUpdateRequest")) {
+            org.assertj.core.api.Assertions.assertThat(schemas.path(name).path("properties")
+                    .has("selfRegistrationEnabled")).as(name).isFalse();
+        }
+        String output = System.getProperty("skillhub.test.openapi-output");
+        if (output != null && !output.isBlank()) {
+            java.nio.file.Files.write(java.nio.file.Path.of(output), bytes);
+        }
+    }
+
+    @Test
+    void removedRegistrationEndpointCannotCreateAnAccountOrSession() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/local/register")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"username":"bob","password":"Abcd123!","email":"bob@example.com"}
+                    """))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> org.assertj.core.api.Assertions.assertThat(
+                        result.getRequest().getSession(false)).isNull());
+        org.mockito.Mockito.verifyNoInteractions(localAuthService, localCredentialRepository);
+        verify(skillHubMetrics, never()).incrementUserRegister();
+    }
 
     @Test
     void login_returnsCurrentUserEnvelope() throws Exception {
@@ -114,61 +150,6 @@ class LocalAuthControllerTest {
         verify(skillHubMetrics).recordLocalLogin(true);
         verify(skillHubMetrics, never()).recordLocalLogin(false);
         verify(authFailureThrottleService).resetIdentifier("local", "alice");
-    }
-
-    @Test
-    void register_returnsCreatedEnvelope() throws Exception {
-        PlatformPrincipal principal = new PlatformPrincipal(
-            "usr_2",
-            "bob",
-            "bob@example.com",
-            "",
-            "local",
-            Set.of()
-        );
-        given(localAuthService.register("bob", "Abcd123!", "bob@example.com")).willReturn(principal);
-        given(localCredentialRepository.existsByUserId("usr_2")).willReturn(true);
-
-        mockMvc.perform(post("/api/v1/auth/local/register")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"username":"bob","password":"Abcd123!","email":"bob@example.com"}
-                    """))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value(0))
-            .andExpect(jsonPath("$.data.displayName").value("bob"))
-            .andExpect(jsonPath("$.data.canChangePassword").value(true));
-        verify(skillHubMetrics).incrementUserRegister();
-    }
-
-    @Test
-    void register_rejectsInvalidEmailFormat() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/local/register")
-                .with(csrf())
-                .header("Accept-Language", "zh-CN")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"username":"bob","password":"Abcd123!","email":"not-an-email"}
-                    """))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value(400));
-
-        verify(localAuthService, never()).register("bob", "Abcd123!", "not-an-email");
-    }
-
-    @Test
-    void register_rejectsBlankEmail() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/local/register")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"username":"bob","password":"Abcd123!","email":" "}
-                    """))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value(400));
-
-        verify(localAuthService, never()).register("bob", "Abcd123!", " ");
     }
 
     @Test

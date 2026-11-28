@@ -367,11 +367,6 @@ spec:
                 configMapKeyRef:
                   name: {{ include "skillhub.fullname" . }}-config
                   key: auth-initial-password-login-enabled
-            - name: SKILLHUB_AUTH_INITIAL_SELF_REGISTRATION_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "skillhub.fullname" . }}-config
-                  key: auth-initial-self-registration-enabled
             - name: SKILLHUB_AUTH_INITIAL_ROLE_GRANTS_JSON
               valueFrom:
                 secretKeyRef:

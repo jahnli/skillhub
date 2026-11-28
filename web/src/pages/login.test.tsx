@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 const authMethodsFixture = vi.hoisted(() => ({
   localize: false,
   reason: undefined as string | undefined,
-  methods: [] as Array<{ id: string, methodType: string }>,
+  methods: [] as Array<{ id: string, methodType: string, provider?: string, actionUrl?: string }>,
   bootstrapEnabled: false,
   directEnabled: false,
   isError: false,
@@ -21,7 +21,6 @@ const authMethodsFixture = vi.hoisted(() => ({
   navigate: vi.fn(),
   mutateAsync: vi.fn(),
   passwordEnabled: true,
-  registrationAvailable: true,
 }))
 
 const koreanI18n = createInstance()
@@ -44,11 +43,11 @@ vi.mock('react-i18next', async () => {
 })
 
 vi.mock('lucide-react', () => ({
-  ArrowRight: () => null,
+  Building2: () => null,
+  MoreHorizontal: () => null,
+  LogIn: () => null,
   Eye: () => null,
   EyeOff: () => null,
-  LockKeyhole: () => null,
-  UserRound: () => null,
 }))
 
 vi.mock('@/api/client', () => ({
@@ -81,8 +80,6 @@ vi.mock('@/features/auth/use-local-auth-capabilities', () => ({
   useLocalAuthCapabilities: () => ({
     data: authMethodsFixture.localCapabilitiesMissing ? undefined : {
       passwordLoginEnabled: authMethodsFixture.passwordEnabled,
-      selfRegistrationEnabled: authMethodsFixture.registrationAvailable,
-      registrationAvailable: authMethodsFixture.registrationAvailable,
     },
     isError: authMethodsFixture.localCapabilitiesError,
     refetch: authMethodsFixture.refetchLocalCapabilities,
@@ -98,6 +95,7 @@ vi.mock('@/features/auth/use-password-login', () => ({
 }))
 
 vi.mock('@/shared/ui/button', () => ({
+  buttonVariants: () => '',
   Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
 }))
 
@@ -122,7 +120,6 @@ describe('LoginPage', () => {
     authMethodsFixture.refetchAuthMethods.mockClear()
     authMethodsFixture.refetchLocalCapabilities.mockClear()
     authMethodsFixture.passwordEnabled = true
-    authMethodsFixture.registrationAvailable = true
     authMethodsFixture.returnTo = ''
     authMethodsFixture.navigate.mockClear()
     authMethodsFixture.mutateAsync.mockClear()
@@ -136,10 +133,11 @@ describe('LoginPage', () => {
     const html = renderToStaticMarkup(<LoginPage />)
 
     expect(html).toContain('login.title')
-    expect(html).toContain('login.subtitle')
+    expect(html).toContain('login.eyebrow')
     expect(html).toContain('login.submit')
     expect(html).not.toContain('login.tabEnterprise')
-    expect(html).toContain('login.register')
+    expect(html).not.toContain('/register')
+    expect(html).not.toContain('login.noAccount')
   })
 
   it('omits the agreement and policy links from the login page', async () => {
@@ -159,9 +157,8 @@ describe('LoginPage', () => {
     expect(screen.getByText('비활성화된 계정입니다')).toBeTruthy()
   })
 
-  it('hides password and registration entry when local authentication is disabled', () => {
+  it('hides password entry when local authentication is disabled', () => {
     authMethodsFixture.passwordEnabled = false
-    authMethodsFixture.registrationAvailable = false
     const html = renderToStaticMarkup(<LoginPage />)
     expect(html).not.toContain('login.submit')
     expect(html).not.toContain('login.register')
@@ -193,23 +190,26 @@ describe('LoginPage', () => {
     await waitFor(() => expect(authMethodsFixture.navigate).toHaveBeenCalledWith({ to: '/skills?tab=mine' }))
   })
 
-  it('replaces the password form with configured session bootstrap and can switch back', () => {
+  it('starts with enterprise sign-in and allows switching to password and back', () => {
     authMethodsFixture.bootstrapEnabled = true
     render(<LoginPage />)
-    const personal = screen.getByRole('button', { name: 'login.tabPersonal' })
-    const organization = screen.getByRole('button', { name: 'login.tabEnterprise' })
-
-    expect(personal.getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByLabelText('login.password').closest('[hidden]')).toBeNull()
-
-    fireEvent.click(organization)
-    expect(organization.getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByLabelText('login.password').closest('[hidden]')).not.toBeNull()
+    expect(screen.queryByLabelText('login.password')).toBeNull()
     expect(screen.getByText('session bootstrap').closest('[hidden]')).toBeNull()
-
-    fireEvent.click(personal)
-    expect(screen.getByLabelText('login.password').closest('[hidden]')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'login.useOtherMethods' }))
+    expect(screen.getByLabelText('login.password')).toBeTruthy()
     expect(screen.getByText('session bootstrap').closest('[hidden]')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'login.groupAccount' }))
+    expect(screen.getByText('session bootstrap').closest('[hidden]')).toBeNull()
+  })
+
+  it('uses the configured OIDC redirect including its return path for the primary action', () => {
+    const actionUrl = '/oauth2/authorization/oidc?returnTo=%2Fskills'
+    authMethodsFixture.methods = [{ id: 'oauth-oidc', methodType: 'OAUTH_REDIRECT', provider: 'oidc', actionUrl }]
+    render(<LoginPage />)
+    expect(screen.getByRole('link', { name: 'login.groupAccount' }).getAttribute('href')).toBe(actionUrl)
+    expect(screen.queryByLabelText('login.password')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'login.useOtherMethods' }))
+    expect(screen.getByLabelText('login.password')).toBeTruthy()
   })
 
   it('does not show an organization entry when bootstrap is not configured', () => {
@@ -238,7 +238,7 @@ describe('LoginPage', () => {
     expect(screen.queryByText('session bootstrap')).toBeNull()
   })
 
-  it('keeps the advertised password form available when registration capabilities fail', () => {
+  it('keeps the advertised password form available when local capabilities fail', () => {
     authMethodsFixture.localCapabilitiesMissing = true
     authMethodsFixture.localCapabilitiesError = true
     authMethodsFixture.methods = [{ id: 'local-password', methodType: 'PASSWORD' }]
@@ -271,7 +271,6 @@ describe('LoginPage', () => {
 
   it('honors an explicitly disabled password capability even if the catalog advertises password', () => {
     authMethodsFixture.passwordEnabled = false
-    authMethodsFixture.registrationAvailable = false
     authMethodsFixture.methods = [{ id: 'local-password', methodType: 'PASSWORD' }]
     render(<LoginPage />)
 
@@ -285,7 +284,6 @@ describe('LoginPage', () => {
     authMethodsFixture.isError = true
     render(<LoginPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.tabEnterprise' }))
     expect(screen.getByText('session bootstrap').closest('[hidden]')).toBeNull()
   })
 })

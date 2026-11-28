@@ -1,5 +1,7 @@
 import { expect, type Page, type TestInfo } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { csrfHeaders } from './csrf'
 import { fixtureClientIp } from './auth-fixtures'
 
@@ -63,7 +65,7 @@ async function loginWithRetry(
     try {
       const login = await request.post('/api/v1/auth/local/login', {
         data: { username, password: currentPassword },
-        headers: await csrfHeaders(page),
+        headers: await csrfHeaders(page, { 'X-Forwarded-For': fixtureClientIp(page) }),
         timeout: requestTimeoutMs,
       })
 
@@ -183,7 +185,6 @@ async function registerSessionOnce(page: Page, testInfo?: TestInfo, options?: Re
   const cachedUsername = cachedUserByWorker.get(worker)
   const cached = !allowMockSession && cachedUsername === 'local-user' ? undefined : cachedUsername
   const username = usernameForWorker(testInfo)
-  const request = page.context().request
 
   await primeAuthProviders(page)
 
@@ -214,131 +215,44 @@ async function registerSessionOnce(page: Page, testInfo?: TestInfo, options?: Re
     return { username, password }
   }
 
-  try {
-    const register = await request.post('/api/v1/auth/local/register', {
-      data: {
-        username,
-        password,
-        email: `${username}@example.test`,
-      },
-      headers: await csrfHeaders(page, { 'X-Forwarded-For': fixtureClientIp(page) }),
-      timeout: requestTimeoutMs,
-    })
+  return createFreshSessionOnce(page, testInfo)
+}
 
-    if (register.ok()) {
-      cachedUserByWorker.set(worker, username)
-      await cacheSession(page, worker, username)
-      return { username, password }
-    }
-
-    if (register.status() === 409 && await loginWithRetry(page, username, password, process.env.CI ? 8 : 6)) {
-      cachedUserByWorker.set(worker, username)
-      await cacheSession(page, worker, username)
-      return { username, password }
-    }
-  } catch {
-    // Fall through to the unique-account fallback below.
+// Only the explicitly configured isolated E2E database receives fixture writes.
+// The command is an argv array for psql, receives SQL on stdin, and never uses a shell.
+function provisionFixtureAccount(username: string) {
+  const configured = process.env.SKILLHUB_E2E_PSQL_COMMAND
+  if (!configured) {
+    throw new Error('Fresh accounts require SKILLHUB_E2E_PSQL_COMMAND for an isolated test database; self-registration is unavailable')
   }
-
-  // Registering creates session cookies for the current request context.
-  // Prefer creating a new unique account to avoid password drift and login throttling.
-  for (let i = 0; i < 12; i += 1) {
-    const uniqueUsername = `${uniqueUsernameForWorker(testInfo)}_${i}`
-
-    try {
-      const register = await request.post('/api/v1/auth/local/register', {
-        data: {
-          username: uniqueUsername,
-          password,
-          email: `${uniqueUsername}@example.test`,
-        },
-        headers: await csrfHeaders(page, { 'X-Forwarded-For': fixtureClientIp(page) }),
-        timeout: requestTimeoutMs,
-      })
-
-      if (register.ok()) {
-        cachedUserByWorker.set(worker, uniqueUsername)
-        await cacheSession(page, worker, uniqueUsername)
-        return { username: uniqueUsername, password }
-      }
-
-      const status = register.status()
-      if (status === 409) {
-        continue
-      }
-
-      if (isRetryableStatus(status)) {
-        await sleep(300 * (i + 1))
-        continue
-      }
-
-      // Username invalidation/conflicts can happen under concurrent CI retries.
-      if (status === 400 || status === 409) {
-        continue
-      }
-
-      expect(register.ok()).toBeTruthy()
-    } catch {
-      await sleep(300 * (i + 1))
-    }
+  const command: unknown = JSON.parse(configured)
+  if (!Array.isArray(command) || command.length === 0 || !command.every(value => typeof value === 'string')) {
+    throw new Error('SKILLHUB_E2E_PSQL_COMMAND must be a non-empty JSON argv array')
   }
-
-  // Final fallback for environments where registration is temporarily unavailable.
-  const fallbackCandidates = [cached, username].filter((candidate): candidate is string => Boolean(candidate))
-  for (const candidate of fallbackCandidates) {
-    if (await loginWithRetry(page, candidate, password, process.env.CI ? 12 : 8)) {
-      cachedUserByWorker.set(worker, candidate)
-      await cacheSession(page, worker, candidate)
-      return { username: candidate, password }
-    }
-  }
-
-  throw new Error(`Failed to establish e2e session for worker ${worker}`)
+  if (!/^e2e_[a-zA-Z0-9_]+$/.test(username)) throw new Error('Invalid fixture username')
+  const userId = `usr_${randomUUID()}`
+  // Public test-only fixture password: Passw0rd!123. Never provision outside a disposable E2E database.
+  const hash = '$2b$12$AasMZOX5df10NFdC6gbDVugYbWGB/cRHIMGmrRGegwt2rusNXmUQ.'
+  const sql = `BEGIN;
+INSERT INTO user_account(id, display_name, email, status) VALUES ('${userId}', '${username}', '${username}@example.test', 'ACTIVE');
+INSERT INTO local_credential(user_id, username, password_hash) VALUES ('${userId}', '${username}', '${hash}');
+INSERT INTO namespace_member(namespace_id, user_id, role) VALUES ((SELECT id FROM namespace WHERE slug = 'global'), '${userId}', 'MEMBER');
+COMMIT;`
+  execFileSync(command[0], command.slice(1), {
+    input: sql, cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+    stdio: ['pipe', 'pipe', 'pipe'], timeout: 15_000,
+  })
 }
 
 async function createFreshSessionOnce(page: Page, testInfo?: TestInfo) {
   const worker = testInfo?.parallelIndex ?? 0
-  const request = page.context().request
-
+  const username = uniqueUsernameForWorker(testInfo)
+  provisionFixtureAccount(username)
   await primeAuthProviders(page)
-
-  for (let i = 0; i < 12; i += 1) {
-    const uniqueUsername = `${uniqueUsernameForWorker(testInfo)}_${i}`
-
-    try {
-      const register = await request.post('/api/v1/auth/local/register', {
-        data: {
-          username: uniqueUsername,
-          password,
-          email: `${uniqueUsername}@example.test`,
-        },
-        headers: await csrfHeaders(page, { 'X-Forwarded-For': fixtureClientIp(page) }),
-        timeout: requestTimeoutMs,
-      })
-
-      if (register.ok()) {
-        cachedUserByWorker.set(worker, uniqueUsername)
-        await cacheSession(page, worker, uniqueUsername)
-        return { username: uniqueUsername, password }
-      }
-
-      const status = register.status()
-      if (status === 409 || status === 400) {
-        continue
-      }
-
-      if (isRetryableStatus(status)) {
-        await sleep(300 * (i + 1))
-        continue
-      }
-
-      expect(register.ok()).toBeTruthy()
-    } catch {
-      await sleep(300 * (i + 1))
-    }
-  }
-
-  throw new Error(`Failed to create fresh e2e session for worker ${worker}`)
+  expect(await loginWithRetry(page, username)).toBeTruthy()
+  cachedUserByWorker.set(worker, username)
+  await cacheSession(page, worker, username)
+  return { username, password }
 }
 
 export async function registerSession(page: Page, testInfo?: TestInfo, options?: RegisterSessionOptions) {

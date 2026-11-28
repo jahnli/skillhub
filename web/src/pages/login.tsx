@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react'
+import { Building2, MoreHorizontal, LogIn, Eye, EyeOff } from 'lucide-react'
 import { getSessionBootstrapRuntimeConfig } from '@/api/client'
 import { AuthShell } from '@/features/auth/auth-shell'
 import { AuthMethodButtonList } from '@/features/auth/login-button'
@@ -9,7 +9,9 @@ import { SessionBootstrapEntry } from '@/features/auth/session-bootstrap-entry'
 import { useAuthMethods } from '@/features/auth/use-auth-methods'
 import { useLocalAuthCapabilities } from '@/features/auth/use-local-auth-capabilities'
 import { usePasswordLogin } from '@/features/auth/use-password-login'
-import { Button } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
+import { withBasePath } from '@/shared/lib/base-path'
+import styles from '@/features/auth/login-actions.module.css'
 import { Input } from '@/shared/ui/input'
 import { resolveAuthReturnTo } from '@/shared/lib/auth-route'
 
@@ -28,7 +30,7 @@ export function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loginMode, setLoginMode] = useState<'personal' | 'organization'>('personal')
+  const [showAlternatives, setShowAlternatives] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ username?: string, password?: string }>({})
   const returnTo = resolveAuthReturnTo(search.returnTo)
   const {
@@ -41,11 +43,17 @@ export function LoginPage() {
   } = useLocalAuthCapabilities()
   const passwordEnabled = localCapabilities?.passwordLoginEnabled
     ?? (localCapabilitiesError && !authMethodsError && authMethods?.some((method) => method.methodType === 'PASSWORD') === true)
-  const effectiveLoginMode = passwordEnabled ? loginMode : 'organization'
   const disabledMessage = search.reason === 'accountDisabled' ? t('error.auth.local.accountDisabled') : null
   const bootstrapMethod = authMethods?.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
-  const hasOrganizationMethod = bootstrapConfig.enabled
-  const hasExternalMethods = authMethods?.some((method) => method.methodType === 'OAUTH_REDIRECT')
+  const externalMethods = (authMethods ?? []).filter((method) => method.methodType === 'OAUTH_REDIRECT')
+  const primaryOAuth = bootstrapConfig.enabled ? undefined : externalMethods.find((method) =>
+    ['oidc', 'casdoor', 'enterprise-sso'].includes(method.provider.toLowerCase()),
+  )
+  const otherProviders = externalMethods.filter((method) => method !== primaryOAuth)
+  const hasOrganizationMethod = bootstrapConfig.enabled || !!primaryOAuth
+  const hasExternalMethods = externalMethods.length > 0
+  const canSwitch = hasOrganizationMethod && (!!passwordEnabled || otherProviders.length > 0)
+  const showGroup = hasOrganizationMethod && !(canSwitch && showAlternatives)
   const noLoginMethod = !passwordEnabled && !hasOrganizationMethod && !hasExternalMethods
   const configUnavailable = noLoginMethod && (localCapabilitiesError || authMethodsError)
     && !localCapabilitiesLoading && !authMethodsLoading
@@ -82,38 +90,41 @@ export function LoginPage() {
 
   return (
     <AuthShell>
-      <div className="flex flex-col gap-5 animate-fade-up xl:min-h-[calc(100svh-12rem)]">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{t('login.eyebrow')}</p>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('login.title')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('login.subtitle')}
+      <div className="flex flex-col gap-6">
+        <div className="space-y-3">
+          <h1 className="text-[34px] font-normal leading-tight tracking-tight text-foreground sm:text-[38px]">{t('login.eyebrow')}</h1>
+          <p className="text-lg leading-relaxed text-muted-foreground">
+            {t('login.title')}
           </p>
         </div>
 
         {disabledMessage ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             {disabledMessage}
           </div>
         ) : null}
 
-        {hasOrganizationMethod && passwordEnabled ? (
-          <div role="group" aria-label={t('login.loginMode')} className="grid grid-cols-2 rounded-lg border border-border bg-muted p-1">
-            <button data-analytics-id="auth.personal.select" type="button" aria-pressed={loginMode === 'personal'} onClick={() => setLoginMode('personal')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:h-10 ${loginMode === 'personal' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-              {t('login.tabPersonal')}
-            </button>
-            <button data-analytics-id="auth.enterprise.select" type="button" aria-pressed={loginMode === 'organization'} onClick={() => setLoginMode('organization')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:h-10 ${loginMode === 'organization' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-              {t('login.tabEnterprise')}
-            </button>
+        {bootstrapConfig.enabled && (
+          <div hidden={!showGroup}>
+            <SessionBootstrapEntry
+              methodDisplayName={bootstrapMethod?.displayName}
+              onAuthenticated={() => navigate({ to: returnTo })}
+              compact
+            />
           </div>
-        ) : null}
+        )}
+        {primaryOAuth && showGroup && (
+          <a data-analytics-id="auth.oauth.request" href={withBasePath(primaryOAuth.actionUrl)}
+            className={buttonVariants({ className: styles.groupButton })}>
+            <Building2 aria-hidden="true" size={17} />
+            {t('login.groupAccount')}
+          </a>
+        )}
 
-        {passwordEnabled ? <div hidden={effectiveLoginMode !== 'personal'}>
+        {passwordEnabled && !showGroup && !authMethodsLoading ? <div>
         <form data-analytics-id="auth.login.submit" className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="username">{t('login.username')}</label>
-                <div className="relative">
-                  <UserRound aria-hidden="true" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="username"
                     autoComplete="username"
@@ -126,22 +137,19 @@ export function LoginPage() {
                     }}
                     placeholder={t('login.usernamePlaceholder')}
                     aria-invalid={fieldErrors.username ? 'true' : 'false'}
-                    className="h-11 pl-10 xl:h-10"
                   />
-                </div>
                 {fieldErrors.username ? (
-                  <p className="text-sm text-red-600">{fieldErrors.username}</p>
+                  <p className="text-sm text-destructive">{fieldErrors.username}</p>
                 ) : null}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
-                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-primary hover:underline">
+                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-muted-foreground hover:text-primary hover:underline">
                     {t('login.forgotPassword')}
                   </Link>
                 </div>
                 <div className="relative">
-                  <LockKeyhole aria-hidden="true" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -154,7 +162,7 @@ export function LoginPage() {
                       }
                     }}
                     placeholder={t('login.passwordPlaceholder')}
-                    className="h-11 pl-10 pr-12 xl:h-10"
+                    className="pr-10"
                     aria-invalid={fieldErrors.password ? 'true' : 'false'}
                   />
                   <button data-analytics-id="auth.password.visibility"
@@ -162,21 +170,21 @@ export function LoginPage() {
                     aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                     aria-pressed={showPassword}
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-[var(--control-radius)] text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {fieldErrors.password ? (
-                  <p className="text-sm text-red-600">{fieldErrors.password}</p>
+                  <p className="text-sm text-destructive">{fieldErrors.password}</p>
                 ) : null}
               </div>
               {loginMutation.error ? (
-                <p className="text-sm text-red-600">{loginMutation.error.message}</p>
+                <p className="text-sm text-destructive">{loginMutation.error.message}</p>
               ) : null}
-              <Button className="h-11 w-full xl:h-10" disabled={loginMutation.isPending} type="submit">
+              <Button className="w-full" disabled={loginMutation.isPending} type="submit">
+                <LogIn aria-hidden="true" className="h-4 w-4" />
                 {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
-                <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
               </Button>
         </form>
         </div> : null}
@@ -194,33 +202,24 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground">{t('systemConfig.passwordDisabled')}</p>
         ) : null}
 
-        {bootstrapConfig.enabled ? (
-          <div hidden={effectiveLoginMode !== 'organization'} className="space-y-2">
-            <SessionBootstrapEntry
-              methodDisplayName={bootstrapMethod?.displayName}
-              onAuthenticated={() => navigate({ to: returnTo })}
-              compact
-            />
-            <p className="text-sm text-muted-foreground">{t('login.orgLoginHint')}</p>
-          </div>
-        ) : null}
-
-        {authMethodsLoading || hasExternalMethods ? (
+        {!showGroup && (authMethodsLoading || otherProviders.length > 0) && (
           <section className="space-y-3" aria-label={t('login.otherMethods')}>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-              {t('login.otherMethods')}
-            </div>
-            <AuthMethodButtonList methods={authMethods} isLoading={authMethodsLoading} compact />
+            {passwordEnabled && <div className={styles.divider}>{t('login.or')}</div>}
+            <AuthMethodButtonList methods={otherProviders} isLoading={authMethodsLoading} compact layout="stack" />
           </section>
-        ) : null}
+        )}
 
-        {localCapabilities?.registrationAvailable ? <p className="text-center text-sm text-muted-foreground">
-          {t('login.noAccount')}
-          {' '}
-          <Link data-analytics-id="auth.register.open" to="/register" search={{ returnTo }} className="font-medium text-primary hover:underline">
-            {t('login.register')}
-          </Link>
-        </p> : null}
+        {canSwitch && (
+          <div className="space-y-3">
+            <div className={styles.divider}>{t('login.or')}</div>
+            <Button type="button" variant="outline" className={styles.switchButton}
+              data-analytics-id={showGroup ? 'auth.personal.select' : 'auth.enterprise.select'}
+              onClick={() => setShowAlternatives(showGroup)}>
+              {showGroup ? <MoreHorizontal aria-hidden="true" size={16} /> : <Building2 aria-hidden="true" size={16} />}
+              {t(showGroup ? 'login.useOtherMethods' : 'login.groupAccount')}
+            </Button>
+          </div>
+        )}
       </div>
     </AuthShell>
   )

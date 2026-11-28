@@ -41,28 +41,25 @@ class InitialAuthSettingsInitializerTest {
 
         verify(settings).save(org.mockito.ArgumentMatchers.argThat(setting ->
                 setting.getSettingKey().equals(LocalAuthSettingsService.SETTING_KEY)
-                        && setting.getValue().equals(Map.of("passwordLoginEnabled", true,
-                                "selfRegistrationEnabled", true))));
+                        && setting.getValue().equals(Map.of("passwordLoginEnabled", true))));
         verify(settings).save(org.mockito.ArgumentMatchers.argThat(setting ->
                 setting.getSettingKey().equals("auth.initial-role-grants.initialized")));
         verify(rules, never()).save(any());
     }
 
     @Test
-    void emptyDatabaseUsesConfiguredLoginFlags() {
+    void emptyDatabaseUsesConfiguredLoginFlag() {
         when(settings.findBySettingKey(LocalAuthSettingsService.SETTING_KEY)).thenReturn(Optional.empty());
         when(settings.findBySettingKey("auth.initial-role-grants.initialized")).thenReturn(Optional.empty());
         when(jdbc.queryForObject("SELECT COUNT(*) FROM user_account", Long.class)).thenReturn(0L);
         InitialAuthSettingsProperties properties = new InitialAuthSettingsProperties();
         properties.setPasswordLoginEnabled(false);
-        properties.setSelfRegistrationEnabled(false);
 
         new InitialAuthSettingsInitializer(properties, settings, rules, roles, new ObjectMapper(), jdbc).run(args);
 
         verify(settings).save(org.mockito.ArgumentMatchers.argThat(setting ->
                 setting.getSettingKey().equals(LocalAuthSettingsService.SETTING_KEY)
-                        && setting.getValue().equals(Map.of("passwordLoginEnabled", false,
-                                "selfRegistrationEnabled", false))));
+                        && setting.getValue().equals(Map.of("passwordLoginEnabled", false))));
     }
 
     @Test
@@ -72,14 +69,12 @@ class InitialAuthSettingsInitializerTest {
         when(jdbc.queryForObject("SELECT COUNT(*) FROM user_account", Long.class)).thenReturn(2L);
         InitialAuthSettingsProperties properties = new InitialAuthSettingsProperties();
         properties.setPasswordLoginEnabled(false);
-        properties.setSelfRegistrationEnabled(false);
 
         new InitialAuthSettingsInitializer(properties, settings, rules, roles, new ObjectMapper(), jdbc).run(args);
 
         verify(settings).save(org.mockito.ArgumentMatchers.argThat(setting ->
                 setting.getSettingKey().equals(LocalAuthSettingsService.SETTING_KEY)
-                        && setting.getValue().equals(Map.of("passwordLoginEnabled", true,
-                                "selfRegistrationEnabled", true))));
+                        && setting.getValue().equals(Map.of("passwordLoginEnabled", true))));
         verify(rules, never()).save(any());
     }
 
@@ -87,7 +82,7 @@ class InitialAuthSettingsInitializerTest {
     void existingMarkerPreventsDeletedRulesFromBeingSeededAgain() {
         when(settings.findBySettingKey(LocalAuthSettingsService.SETTING_KEY))
                 .thenReturn(Optional.of(new SystemSetting(LocalAuthSettingsService.SETTING_KEY,
-                        Map.of("passwordLoginEnabled", false, "selfRegistrationEnabled", true))));
+                        Map.of("passwordLoginEnabled", false))));
         when(settings.findBySettingKey("auth.initial-role-grants.initialized"))
                 .thenReturn(Optional.of(new SystemSetting("auth.initial-role-grants.initialized",
                         Map.of("initialized", true))));

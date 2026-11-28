@@ -72,6 +72,8 @@ jobs:
       - name: Run frontend E2E tests
         # Playwright's 30-minute budget leaves time for reports and cleanup.
         timeout-minutes: 35
+        env:
+          SKILLHUB_E2E_PSQL_COMMAND: '["docker","compose","exec","-T","postgres","psql","-U","skillhub","-d","skillhub","-v","ON_ERROR_STOP=1"]'
         run: make test-e2e-frontend
 
       - name: Upload Playwright HTML report

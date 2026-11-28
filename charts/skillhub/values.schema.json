@@ -35,10 +35,9 @@
         "initialSettings": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["passwordLoginEnabled", "selfRegistrationEnabled"],
+          "required": ["passwordLoginEnabled"],
           "properties": {
-            "passwordLoginEnabled": { "type": "boolean" },
-            "selfRegistrationEnabled": { "type": "boolean" }
+            "passwordLoginEnabled": { "type": "boolean" }
           }
         }
       }

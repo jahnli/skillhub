@@ -7,10 +7,9 @@ PASS=0
 FAIL=0
 TMP_DIR="$(mktemp -d)"
 COOKIE_JAR="$TMP_DIR/cookies"
-USERNAME="smoketest_$(date +%s)"
-EMAIL="${USERNAME}@example.com"
-PASSWORD="Smoke@2026"
-NEW_PASSWORD="Smoke@2027"
+USERNAME="${SMOKE_USERNAME:-}"
+PASSWORD="${SMOKE_PASSWORD:-}"
+NEW_PASSWORD="${SMOKE_NEW_PASSWORD:-}"
 
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -105,71 +104,96 @@ CSRF_TOKEN="$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$COOKIE_JAR" | tail -n 1)"
 
 REGISTER_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
   -X POST "$BASE_URL/api/v1/auth/local/register" \
-  -b "$COOKIE_JAR" \
-  -c "$COOKIE_JAR" \
-  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+  -b "$COOKIE_JAR" -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD\",\"email\":\"$EMAIL\"}" || true)"
-if [[ "$REGISTER_STATUS" == "200" ]]; then
-  echo "PASS: Register (HTTP $REGISTER_STATUS)"
+  -d '{"username":"retired_registration","password":"UnusedPass1!","email":"retired@example.test"}' || true)"
+if [[ "$REGISTER_STATUS" == "404" ]]; then
+  echo "PASS: Self-registration endpoint removed (HTTP $REGISTER_STATUS)"
   PASS=$((PASS + 1))
 else
-  echo "FAIL: Register (got $REGISTER_STATUS)"
+  echo "FAIL: Self-registration endpoint must be unavailable (got $REGISTER_STATUS)"
   FAIL=$((FAIL + 1))
 fi
 
-AUTH_ME_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/auth/me" || true)"
-if [[ "$AUTH_ME_STATUS" == "200" ]]; then
-  echo "PASS: Auth me with session (HTTP $AUTH_ME_STATUS)"
-  PASS=$((PASS + 1))
-else
-  echo "FAIL: Auth me with session (got $AUTH_ME_STATUS)"
+if [[ ( -n "$USERNAME" && -z "$PASSWORD" ) || ( -z "$USERNAME" && -n "$PASSWORD" ) || ( -n "$NEW_PASSWORD" && -z "$USERNAME" ) ]]; then
+  echo "FAIL: Account session checks require both SMOKE_USERNAME and SMOKE_PASSWORD"
   FAIL=$((FAIL + 1))
 fi
 
-NAMESPACES_AUTH_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/namespaces" || true)"
-if [[ "$NAMESPACES_AUTH_STATUS" == "200" ]]; then
-  echo "PASS: Namespaces API with session (HTTP $NAMESPACES_AUTH_STATUS)"
-  PASS=$((PASS + 1))
-else
-  echo "FAIL: Namespaces API with session (got $NAMESPACES_AUTH_STATUS)"
-  FAIL=$((FAIL + 1))
-fi
+if [[ -n "$USERNAME" && -n "$PASSWORD" ]]; then
+  LOGIN_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
+    -X POST "$BASE_URL/api/v1/auth/local/login" \
+    -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
+    -H "X-XSRF-TOKEN: $CSRF_TOKEN" -H "Content-Type: application/json" \
+    -d "{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD\"}" || true)"
+  if [[ "$LOGIN_STATUS" == "200" ]]; then
+    echo "PASS: Login with provisioned account (HTTP $LOGIN_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Login with provisioned account (got $LOGIN_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
+  CSRF_TOKEN="$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$COOKIE_JAR" | tail -n 1)"
 
-CHANGE_PASSWORD_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
-  -X POST "$BASE_URL/api/v1/auth/local/change-password" \
-  -b "$COOKIE_JAR" \
-  -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"currentPassword\":\"$PASSWORD\",\"newPassword\":\"$NEW_PASSWORD\"}" || true)"
-if [[ "$CHANGE_PASSWORD_STATUS" == "200" ]]; then
-  echo "PASS: Change password (HTTP $CHANGE_PASSWORD_STATUS)"
-  PASS=$((PASS + 1))
-else
-  echo "FAIL: Change password (got $CHANGE_PASSWORD_STATUS)"
-  FAIL=$((FAIL + 1))
-fi
+  AUTH_ME_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/auth/me" || true)"
+  if [[ "$AUTH_ME_STATUS" == "200" ]]; then
+    echo "PASS: Auth me with session (HTTP $AUTH_ME_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Auth me with session (got $AUTH_ME_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
 
-LOGOUT_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
-  -X POST "$BASE_URL/api/v1/auth/logout" \
-  -b "$COOKIE_JAR" \
-  -c "$COOKIE_JAR" \
-  -H "X-XSRF-TOKEN: $CSRF_TOKEN" || true)"
-if [[ "$LOGOUT_STATUS" == "302" || "$LOGOUT_STATUS" == "200" || "$LOGOUT_STATUS" == "204" ]]; then
-  echo "PASS: Logout (HTTP $LOGOUT_STATUS)"
-  PASS=$((PASS + 1))
-else
-  echo "FAIL: Logout (got $LOGOUT_STATUS)"
-  FAIL=$((FAIL + 1))
-fi
+  NAMESPACES_AUTH_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/namespaces" || true)"
+  if [[ "$NAMESPACES_AUTH_STATUS" == "200" ]]; then
+    echo "PASS: Namespaces API with session (HTTP $NAMESPACES_AUTH_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Namespaces API with session (got $NAMESPACES_AUTH_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
 
-POST_LOGOUT_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/auth/me" || true)"
-if [[ "$POST_LOGOUT_STATUS" == "401" ]]; then
-  echo "PASS: Auth me after logout (HTTP $POST_LOGOUT_STATUS)"
-  PASS=$((PASS + 1))
+  if [[ -n "$NEW_PASSWORD" ]]; then
+  CHANGE_PASSWORD_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
+    -X POST "$BASE_URL/api/v1/auth/local/change-password" \
+    -b "$COOKIE_JAR" \
+    -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"currentPassword\":\"$PASSWORD\",\"newPassword\":\"$NEW_PASSWORD\"}" || true)"
+  if [[ "$CHANGE_PASSWORD_STATUS" == "200" ]]; then
+    echo "PASS: Change password (HTTP $CHANGE_PASSWORD_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Change password (got $CHANGE_PASSWORD_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
+
+  fi
+
+  LOGOUT_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
+    -X POST "$BASE_URL/api/v1/auth/logout" \
+    -b "$COOKIE_JAR" \
+    -c "$COOKIE_JAR" \
+    -H "X-XSRF-TOKEN: $CSRF_TOKEN" || true)"
+  if [[ "$LOGOUT_STATUS" == "302" || "$LOGOUT_STATUS" == "200" || "$LOGOUT_STATUS" == "204" ]]; then
+    echo "PASS: Logout (HTTP $LOGOUT_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Logout (got $LOGOUT_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
+
+  POST_LOGOUT_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE_URL/api/v1/auth/me" || true)"
+  if [[ "$POST_LOGOUT_STATUS" == "401" ]]; then
+    echo "PASS: Auth me after logout (HTTP $POST_LOGOUT_STATUS)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: Auth me after logout (got $POST_LOGOUT_STATUS)"
+    FAIL=$((FAIL + 1))
+  fi
+
 else
-  echo "FAIL: Auth me after logout (got $POST_LOGOUT_STATUS)"
-  FAIL=$((FAIL + 1))
+  echo "SKIP: Account session checks (set SMOKE_USERNAME and SMOKE_PASSWORD for a provisioned test account)"
 fi
 
 # ---- Label Management (requires admin) ----

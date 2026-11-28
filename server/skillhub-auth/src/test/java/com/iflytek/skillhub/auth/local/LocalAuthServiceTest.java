@@ -17,8 +17,6 @@ import com.iflytek.skillhub.auth.exception.AuthFlowException;
 import com.iflytek.skillhub.auth.entity.Role;
 import com.iflytek.skillhub.auth.entity.UserRoleBinding;
 import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
-import com.iflytek.skillhub.domain.event.UserActivatedEvent;
-import com.iflytek.skillhub.domain.namespace.GlobalNamespaceMembershipService;
 import com.iflytek.skillhub.domain.user.UserAccount;
 import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.domain.user.UserStatus;
@@ -30,10 +28,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -52,13 +48,7 @@ class LocalAuthServiceTest {
     private UserRoleBindingRepository userRoleBindingRepository;
 
     @Mock
-    private GlobalNamespaceMembershipService globalNamespaceMembershipService;
-
-    @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private LocalAuthSettingsService authSettings;
@@ -71,11 +61,9 @@ class LocalAuthServiceTest {
             credentialRepository,
             userAccountRepository,
             userRoleBindingRepository,
-            globalNamespaceMembershipService,
             new PasswordPolicyValidator(),
             passwordEncoder,
             CLOCK,
-            eventPublisher,
             authSettings
         );
     }
@@ -92,17 +80,6 @@ class LocalAuthServiceTest {
     }
 
     @Test
-    void disabledRegistrationStopsAccountCreation() {
-        doThrow(new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.registration.disabled"))
-            .when(authSettings).requireSelfRegistration();
-
-        assertThatThrownBy(() -> service.register("alice", "Abcd123!", "alice@example.com"))
-            .isInstanceOf(AuthFlowException.class)
-            .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
-        verifyNoInteractions(userAccountRepository, credentialRepository);
-    }
-
-    @Test
     void disabledPasswordLoginStopsChangePasswordBeforeCredentialLookup() {
         doThrow(new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.login.disabled"))
             .when(authSettings).requirePasswordLogin();
@@ -111,42 +88,6 @@ class LocalAuthServiceTest {
             .isInstanceOf(AuthFlowException.class)
             .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
         verifyNoInteractions(credentialRepository, passwordEncoder);
-    }
-
-    @Test
-    void register_createsUserAndCredential() {
-        given(credentialRepository.existsByUsernameIgnoreCase("alice")).willReturn(false);
-        given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.empty());
-        given(passwordEncoder.encode("Abcd123!")).willReturn("encoded");
-        given(userAccountRepository.save(any(UserAccount.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(userRoleBindingRepository.findByUserId(any())).willReturn(List.of());
-
-        var principal = service.register("Alice", "Abcd123!", "alice@example.com");
-
-        ArgumentCaptor<UserAccount> userCaptor = ArgumentCaptor.forClass(UserAccount.class);
-        verify(userAccountRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getDisplayName()).isEqualTo("alice");
-        assertThat(principal.displayName()).isEqualTo("alice");
-        assertThat(principal.email()).isEqualTo("alice@example.com");
-        assertThat(principal.platformRoles()).containsExactly("USER");
-        verify(credentialRepository).save(any(LocalCredential.class));
-        verify(globalNamespaceMembershipService).ensureMember(userCaptor.getValue().getId());
-    }
-
-    @Test
-    void register_publishesActivationWithTheNormalizedUsername() {
-        given(credentialRepository.existsByUsernameIgnoreCase("alice")).willReturn(false);
-        given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.empty());
-        given(passwordEncoder.encode("Abcd123!")).willReturn("encoded");
-        given(userAccountRepository.save(any(UserAccount.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(userRoleBindingRepository.findByUserId(any())).willReturn(List.of());
-
-        service.register("Alice", "Abcd123!", "alice@example.com");
-
-        ArgumentCaptor<UserActivatedEvent> eventCaptor = ArgumentCaptor.forClass(UserActivatedEvent.class);
-        verify(eventPublisher).publishEvent(eventCaptor.capture());
-        assertThat(eventCaptor.getValue().username()).isEqualTo("alice");
-        assertThat(eventCaptor.getValue().email()).isEqualTo("alice@example.com");
     }
 
     @Test
@@ -307,21 +248,4 @@ class LocalAuthServiceTest {
         verify(credentialRepository, never()).save(any(LocalCredential.class));
     }
 
-    @Test
-    void register_rejectsInvalidEmailFormat() {
-        given(credentialRepository.existsByUsernameIgnoreCase("alice")).willReturn(false);
-
-        assertThatThrownBy(() -> service.register("Alice", "Abcd123!", "not-an-email"))
-            .isInstanceOf(AuthFlowException.class)
-            .hasMessageContaining("validation.auth.local.email.invalid");
-    }
-
-    @Test
-    void register_rejectsBlankEmail() {
-        given(credentialRepository.existsByUsernameIgnoreCase("alice")).willReturn(false);
-
-        assertThatThrownBy(() -> service.register("Alice", "Abcd123!", "   "))
-            .isInstanceOf(AuthFlowException.class)
-            .hasMessageContaining("validation.auth.local.email.notBlank");
-    }
 }

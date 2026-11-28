@@ -54,7 +54,7 @@ describe('getAppMainContentLayout', () => {
     expect(CONSOLE_SIDEBAR_CONTENT_CLASS_NAME).toContain('lg:pl-10')
   })
 
-  it.each(['/login', '/register'])('preserves the separate split-auth composition on %s', (pathname) => {
+  it.each(['/login'])('preserves the separate split-auth composition on %s', (pathname) => {
     expect(getAppMainContentLayout(pathname)).toEqual({
       mainClassName: SPLIT_AUTH_MAIN_CLASS_NAME,
       contentClassName: '',

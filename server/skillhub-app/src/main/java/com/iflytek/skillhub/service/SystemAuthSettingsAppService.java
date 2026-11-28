@@ -70,8 +70,7 @@ public class SystemAuthSettingsAppService {
         }
         Map<String, Object> previous = setting.getValue();
         setting.update(Map.of(
-                LocalAuthSettingsService.PASSWORD_LOGIN_KEY, request.passwordLoginEnabled(),
-                LocalAuthSettingsService.SELF_REGISTRATION_KEY, request.selfRegistrationEnabled()), actorUserId);
+                LocalAuthSettingsService.PASSWORD_LOGIN_KEY, request.passwordLoginEnabled()), actorUserId);
         settings.saveAndFlush(setting);
         record(actorUserId, "SYSTEM_AUTH_SETTINGS_UPDATE", "SYSTEM_SETTING", setting.getId(), context,
                 AuditDetail.builder().put("previous", previous).put("current", setting.getValue()).build());
@@ -175,7 +174,7 @@ public class SystemAuthSettingsAppService {
     }
 
     private SystemAuthSettingsResponse toResponse(LocalAuthSettings value) {
-        return new SystemAuthSettingsResponse(value.passwordLoginEnabled(), value.selfRegistrationEnabled(),
+        return new SystemAuthSettingsResponse(value.passwordLoginEnabled(),
                 value.version(), value.updatedAt());
     }
 

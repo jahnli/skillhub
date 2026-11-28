@@ -76,7 +76,7 @@ class AuthControllerTest {
 
     @org.junit.jupiter.api.BeforeEach
     void localAuthEnabled() {
-        given(localAuthSettingsService.current()).willReturn(new LocalAuthSettings(1L, true, true, 0L, null));
+        given(localAuthSettingsService.current()).willReturn(new LocalAuthSettings(1L, true, 0L, null));
     }
 
     @Test

@@ -9,17 +9,13 @@ vi.mock('react-i18next', async (original) => ({ ...await original<typeof import(
 import { AuthShell } from './auth-shell'
 
 describe('AuthShell', () => {
-  it('renders theme-aware product content beside the form', () => {
+  it('renders the workspace branding and form', () => {
     const html = renderToStaticMarkup(<AuthShell><div>Login form</div></AuthShell>)
 
-    expect(html).toContain('bg-muted text-foreground')
-    expect(html).toContain('sticky top-0 hidden h-svh')
-    expect(html).toContain('authShell.heroTitle')
+    expect(html).toContain('SkillHub')
+    expect(html).toContain('max-w-[400px]')
     expect(html).not.toContain('authShell.shortTagline')
-    expect(html).toContain('login-skill-art-light.png')
-    expect(html).toContain('login-skill-art-dark.png')
     expect(html).not.toContain('authShell.backHome')
-    expect(html).toContain('pt-20')
     expect(html).toContain('Login form')
   })
 })

@@ -25,13 +25,10 @@ export interface AuthMethod {
 
 export interface LocalAuthCapabilities {
   passwordLoginEnabled: boolean
-  selfRegistrationEnabled: boolean
-  registrationAvailable: boolean
 }
 
 export interface SystemAuthSettings {
   passwordLoginEnabled: boolean
-  selfRegistrationEnabled: boolean
   version: number
   updatedAt: string
 }
@@ -102,10 +99,6 @@ export type CreateTokenResponse = Omit<components['schemas']['TokenCreateRespons
 export interface LocalLoginRequest {
   username: string
   password: string
-}
-
-export interface LocalRegisterRequest extends LocalLoginRequest {
-  email: string
 }
 
 export interface ChangePasswordRequest {

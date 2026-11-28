@@ -96,12 +96,12 @@ class SystemAuthSettingsPostgresTest {
         assertThat(jdbc.queryForObject("SELECT jsonb_typeof(value_json) FROM system_setting WHERE id = ?",
                 String.class, id)).isEqualTo("object");
 
-        reloaded.update(Map.of("passwordLoginEnabled", false, "selfRegistrationEnabled", true), "admin");
+        reloaded.update(Map.of("passwordLoginEnabled", false), "admin");
         settings.saveAndFlush(reloaded);
         entityManager.clear();
         assertThat(settings.findBySettingKey(key).orElseThrow().getVersion()).isEqualTo(1L);
-        assertThat(settings.findBySettingKey(key).orElseThrow().getValue().get("passwordLoginEnabled"))
-                .isEqualTo(false);
+        assertThat(settings.findBySettingKey(key).orElseThrow().getValue())
+                .containsExactlyEntriesOf(Map.of("passwordLoginEnabled", false));
     }
 
     @Test

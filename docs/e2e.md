@@ -50,14 +50,24 @@ web/
 
 - `web/e2e/*.spec.ts`：按用户业务流组织测试
 - `web/e2e/helpers/auth-fixtures.ts`：locale 等非网络辅助
-- `web/e2e/helpers/session.ts`：真实认证会话建立（登录/注册 + worker 级隔离）
+- `web/e2e/helpers/session.ts`：真实认证会话建立（真实登录 + worker 级隔离）
 - `web/e2e/helpers/test-data-builder.ts`：通用测试数据构建与清理（namespace/skill/review）
+
+自助注册已移除。`registerSession` 保留现有 helper 名称，但只恢复会话、登录已有账号或使用显式配置的数据库命令准备测试账号；不调用注册接口。`createFreshSession` 在一次事务中创建专用账号、BCrypt 凭据和全局命名空间成员，再通过真实登录接口建立会话。该数据库夹具不证明账号激活事件或邮件通知链路。
+
+仅在可丢弃的隔离 E2E 数据库使用以下配置（命令工作目录为仓库根目录）：
+
+```bash
+export SKILLHUB_E2E_PSQL_COMMAND='["docker","compose","exec","-T","postgres","psql","-U","skillhub","-d","skillhub","-v","ON_ERROR_STOP=1"]'
+```
+
+命令以 argv 数组执行，SQL 经标准输入传递；未设置时需要新账号的用例明确失败，不回退到公开注册。CI 仅在其专用开发栈中设置此变量。测试夹具使用公开的测试密码，不能用于共享或正式数据库；测试账号随隔离环境回收，helper 不负责删除账号。纯已有账号登录和开发态身份夹具不需要该数据库命令。
 
 ## 3. 当前覆盖范围
 
 当前真实请求 E2E 覆盖 23 个 spec：
 
-- `auth-entry.spec.ts`：登录入口、注册入口、`returnTo` 保留
+- `auth-entry.spec.ts`：登录入口、注册不可用、`returnTo` 保留
 - `landing-navigation.spec.ts`：首页导航与匿名受限跳转
 - `public-pages.spec.ts`：公开法律页面可达
 - `search-flow.spec.ts`：搜索查询状态与匿名收藏筛选跳转登录
@@ -118,7 +128,7 @@ cd web && pnpm test:e2e:ui
 
 - 需要登录态的用例统一复用 `registerSession(page, testInfo)`
 - 通过 worker 级账号隔离避免并发冲突
-- 不在 spec 内重复手写登录/注册流程
+- 不在 spec 内重复手写会话建立流程
 
 ### 5.3 选择器优先级
 
@@ -155,7 +165,7 @@ CI 同时输出逐用例进度并生成 HTML 报告。Playwright 总运行预算
 
 ## 8. 常见问题排查
 
-- 认证失败：先确认后端可达（`http://localhost:8080`）且注册/登录接口正常
+- 认证失败：先确认后端可达（`http://localhost:8080`）且登录接口正常
 - 用例偶发失败：优先检查选择器歧义和断言时机，不要用固定等待掩盖
 - 并发冲突：确认用例是否复用统一 helper，并避免共享可变测试数据
 

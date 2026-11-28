@@ -10,7 +10,6 @@ import type {
   CreateTokenResponse,
   MergeConfirmRequest,
   LocalLoginRequest,
-  LocalRegisterRequest,
   MergeInitiateRequest,
   MergeInitiateResponse,
   MergeApprovalDetails,
@@ -799,16 +798,6 @@ export const authApi = {
     })
   },
 
-  async localRegister(request: LocalRegisterRequest): Promise<User> {
-    return fetchJson<User>('/api/v1/auth/local/register', {
-      method: 'POST',
-      headers: await ensureCsrfHeaders({
-        'Content-Type': 'application/json',
-      }),
-      body: JSON.stringify(request),
-    })
-  },
-
   async changePassword(request: ChangePasswordRequest): Promise<void> {
     await fetchJson<void>('/api/v1/auth/local/change-password', {
       method: 'POST',
@@ -901,7 +890,7 @@ export const systemConfigApi = {
     return fetchJson<SystemAuthSettings>('/api/v1/admin/system-config/auth/local')
   },
 
-  updateLocalAuth(request: Pick<SystemAuthSettings, 'passwordLoginEnabled' | 'selfRegistrationEnabled' | 'version'>): Promise<SystemAuthSettings> {
+  updateLocalAuth(request: Pick<SystemAuthSettings, 'passwordLoginEnabled' | 'version'>): Promise<SystemAuthSettings> {
     return fetchJson<SystemAuthSettings>('/api/v1/admin/system-config/auth/local', {
       method: 'PUT',
       headers: getCsrfHeaders({ 'Content-Type': 'application/json' }),

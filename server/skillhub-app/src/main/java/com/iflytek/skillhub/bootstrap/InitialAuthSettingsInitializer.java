@@ -73,9 +73,7 @@ public class InitialAuthSettingsInitializer implements ApplicationRunner {
             boolean newInstallation = existingUsers == 0L;
             settings.save(new SystemSetting(LocalAuthSettingsService.SETTING_KEY, Map.of(
                     LocalAuthSettingsService.PASSWORD_LOGIN_KEY,
-                    newInstallation ? properties.isPasswordLoginEnabled() : true,
-                    LocalAuthSettingsService.SELF_REGISTRATION_KEY,
-                    newInstallation ? properties.isSelfRegistrationEnabled() : true)));
+                    newInstallation ? properties.isPasswordLoginEnabled() : true)));
         }
         if (settings.findBySettingKey(GRANT_SEED_MARKER).isPresent()) {
             return;

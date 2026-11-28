@@ -98,7 +98,6 @@ const LandingPage = createLazyRouteComponent(() => import('@/pages/landing'), 'L
 const HomePage = createLazyRouteComponent(() => import('@/pages/home'), 'HomePage')
 const LoginPage = createLazyRouteComponent(() => import('@/pages/login'), 'LoginPage')
 const DeviceAuthPage = createLazyRouteComponent(() => import('@/pages/device'), 'DeviceAuthPage')
-const RegisterPage = createLazyRouteComponent(() => import('@/pages/register'), 'RegisterPage')
 const ResetPasswordPage = createLazyRouteComponent(() => import('@/pages/reset-password'), 'ResetPasswordPage')
 const PrivacyPolicyPage = createLazyRouteComponent(() => import('@/pages/privacy'), 'PrivacyPolicyPage')
 const SearchPage = createLazyRouteComponent(() => import('@/pages/search'), 'SearchPage')
@@ -286,15 +285,6 @@ const loginRoute = createRoute({
     reason: typeof search.reason === 'string' ? search.reason : undefined,
   }),
   component: LoginPage,
-})
-
-const registerRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: 'register',
-  validateSearch: (search: Record<string, unknown>) => ({
-    returnTo: isSafeAuthReturnTo(search.returnTo) ? search.returnTo : '',
-  }),
-  component: RegisterPage,
 })
 
 const resetPasswordRoute = createRoute({
@@ -838,7 +828,6 @@ const routeTree = rootRoute.addChildren([
   landingRoute,
   skillsRoute,
   loginRoute,
-  registerRoute,
   resetPasswordRoute,
   privacyRoute,
   searchRoute,

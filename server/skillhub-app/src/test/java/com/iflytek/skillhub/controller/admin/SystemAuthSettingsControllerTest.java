@@ -42,13 +42,13 @@ class SystemAuthSettingsControllerTest {
     @Test
     void superAdminCanChangeSettings() throws Exception {
         when(service.updateLocalSettings(any(), eq("admin"), any()))
-                .thenReturn(new SystemAuthSettingsResponse(false, true, 1L, Instant.now()));
+                .thenReturn(new SystemAuthSettingsResponse(false, 1L, Instant.now()));
 
         mockMvc.perform(put("/api/v1/admin/system-config/auth/local")
                         .with(authentication(auth("SUPER_ADMIN"))).with(csrf())
                         .contentType("application/json")
                         .content("""
-                                {"passwordLoginEnabled":false,"selfRegistrationEnabled":true,"version":0}
+                                {"passwordLoginEnabled":false,"version":0}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.passwordLoginEnabled").value(false));
@@ -60,7 +60,7 @@ class SystemAuthSettingsControllerTest {
                         .with(authentication(auth("USER_ADMIN"))).with(csrf())
                         .contentType("application/json")
                         .content("""
-                                {"passwordLoginEnabled":false,"selfRegistrationEnabled":true,"version":0}
+                                {"passwordLoginEnabled":false,"version":0}
                                 """))
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/v1/admin/system-config/role-grants")

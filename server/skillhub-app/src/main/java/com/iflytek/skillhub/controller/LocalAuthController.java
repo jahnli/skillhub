@@ -11,7 +11,6 @@ import com.iflytek.skillhub.dto.ApiResponseFactory;
 import com.iflytek.skillhub.dto.AuthMeResponse;
 import com.iflytek.skillhub.dto.ChangePasswordRequest;
 import com.iflytek.skillhub.dto.LocalLoginRequest;
-import com.iflytek.skillhub.dto.LocalRegisterRequest;
 import com.iflytek.skillhub.dto.LocalAuthCapabilitiesResponse;
 import com.iflytek.skillhub.dto.PasswordResetConfirmRequest;
 import com.iflytek.skillhub.dto.PasswordResetRequestDto;
@@ -31,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * HTTP endpoints for local account registration, login, and password changes.
+ * HTTP endpoints for local account login and password changes.
  */
 @RestController
 @RequestMapping("/api/v1/auth/local")
@@ -67,17 +66,7 @@ public class LocalAuthController extends BaseApiController {
     public ApiResponse<LocalAuthCapabilitiesResponse> capabilities() {
         var current = authSettings.current();
         return ok("response.success.read", new LocalAuthCapabilitiesResponse(
-                current.passwordLoginEnabled(), current.selfRegistrationEnabled(), current.registrationAvailable()));
-    }
-
-    @PostMapping("/register")
-    @RateLimit(category = "auth-register", authenticated = 10, anonymous = 5, windowSeconds = 300)
-    public ApiResponse<AuthMeResponse> register(@Valid @RequestBody LocalRegisterRequest request,
-                                                HttpServletRequest httpRequest) {
-        PlatformPrincipal principal = localAuthService.register(request.username(), request.password(), request.email());
-        skillHubMetrics.incrementUserRegister();
-        platformSessionService.establishSession(principal, httpRequest);
-        return ok("response.success.created", authMeResponseAssembler.from(principal));
+                current.passwordLoginEnabled()));
     }
 
     @PostMapping("/login")

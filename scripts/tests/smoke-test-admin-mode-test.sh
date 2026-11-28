@@ -95,17 +95,14 @@ case "$url" in
   */api/v1/auth/me)
     if [[ -n "$cookie_in" && -f "$cookie_in.session" && ! -f "$cookie_in.logged-out" ]]; then status=200; else status=401; fi
     ;;
-  */api/v1/auth/local/register)
-    [[ -n "$cookie_out" ]] && touch "$cookie_out.session"
-    status=200
-    ;;
+  */api/v1/auth/local/register) status=404 ;;
   */api/v1/auth/local/change-password) status=200 ;;
   */api/v1/auth/logout)
     [[ -n "$cookie_out" ]] && touch "$cookie_out.logged-out"
     status=200
     ;;
   */api/v1/auth/local/login)
-    if [[ "$data" == *'"username":"current-admin"'* && "$data" == *'"password":"current-secret"'* ]]; then
+    if [[ ( "$data" == *'"username":"current-admin"'* && "$data" == *'"password":"current-secret"'* ) || ( "$data" == *'"username":"fixture-user"'* && "$data" == *'"password":"fixture-secret"'* ) ]]; then
       [[ -n "$cookie_out" ]] && touch "$cookie_out.session"
       status=200
     else
@@ -154,6 +151,22 @@ grep -Fq "SKIP: Admin label management" "$TMP_DIR/skip-admin.out" \
 if grep -Fq "/api/v1/auth/local/login" "$TMP_DIR/skip-admin.curl.log"; then
   fail "default smoke must not attempt admin login without explicit credentials"
 fi
+
+grep -Fq "Self-registration endpoint removed (HTTP 404)" "$TMP_DIR/skip-admin.out" \
+  || fail "default smoke must verify that self-registration is unavailable"
+grep -Fq "SKIP: Account session checks" "$TMP_DIR/skip-admin.out" \
+  || fail "default smoke must report skipped account checks"
+
+status="$(run_smoke provisioned-user env SMOKE_USERNAME=fixture-user SMOKE_PASSWORD=fixture-secret)"
+[[ "$status" == "0" ]] || fail "provisioned user login should pass"
+grep -Fq "PASS: Login with provisioned account" "$TMP_DIR/provisioned-user.out" \
+  || fail "provisioned user must authenticate through the login endpoint"
+if grep -Fq '/api/v1/auth/local/change-password' "$TMP_DIR/provisioned-user.curl.log"; then
+  fail "password must not change unless SMOKE_NEW_PASSWORD is provided"
+fi
+
+status="$(run_smoke incomplete-user env SMOKE_USERNAME=fixture-user)"
+[[ "$status" != "0" ]] || fail "incomplete account configuration must fail"
 
 status="$(run_smoke missing-admin env SMOKE_ADMIN_CHECKS=true)"
 [[ "$status" != "0" ]] || fail "SMOKE_ADMIN_CHECKS=true without credentials should fail"

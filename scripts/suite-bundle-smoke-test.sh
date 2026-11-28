@@ -14,8 +14,8 @@ ENTRY_SLUG="bundle-entry-${TOKEN}"
 REFERENCE_SLUG="bundle-reference-${TOKEN}"
 SUITE_SLUG="bundle-suite-${TOKEN}"
 LABEL_SLUG="bundle-label-${TOKEN}"
-USER_NAME="bundle_user_${TOKEN}"
-USER_PASSWORD="BundleUser${TOKEN}!Aa9"
+USER_NAME="${SMOKE_USERNAME:-}"
+USER_PASSWORD="${SMOKE_PASSWORD:-}"
 SUITE_ID=""
 ENTRY_SKILL_ID=""
 REFERENCE_SKILL_ID=""
@@ -95,8 +95,8 @@ cleanup() {
 
 trap cleanup EXIT
 
-if [[ -z "$ADMIN_USERNAME" || -z "$ADMIN_PASSWORD" ]]; then
-  echo "FAIL: SMOKE_ADMIN_USERNAME and SMOKE_ADMIN_PASSWORD are required" >&2
+if [[ -z "$ADMIN_USERNAME" || -z "$ADMIN_PASSWORD" || -z "$USER_NAME" || -z "$USER_PASSWORD" ]]; then
+  echo "FAIL: SMOKE_ADMIN_USERNAME, SMOKE_ADMIN_PASSWORD, SMOKE_USERNAME and SMOKE_PASSWORD are required (use provisioned test accounts)" >&2
   exit 1
 fi
 
@@ -231,11 +231,11 @@ ADMIN_CSRF="$(csrf_token "$ADMIN_COOKIE")"
 
 bootstrap_cookie "$USER_COOKIE"
 USER_CSRF="$(csrf_token "$USER_COOKIE")"
-REGISTER_RESPONSE="$(curl -fsS -b "$USER_COOKIE" -c "$USER_COOKIE" \
+USER_LOGIN_RESPONSE="$(curl -fsS -b "$USER_COOKIE" -c "$USER_COOKIE" \
   -H "X-XSRF-TOKEN: $USER_CSRF" -H "Content-Type: application/json" \
-  -X POST "$BASE_URL/api/v1/auth/local/register" \
-  -d "{\"username\":\"$USER_NAME\",\"password\":\"$USER_PASSWORD\",\"email\":\"$USER_NAME@example.test\"}")"
-assert_code "register a non-admin Skill owner" "$REGISTER_RESPONSE"
+  -X POST "$BASE_URL/api/v1/auth/local/login" \
+  -d "{\"username\":\"$USER_NAME\",\"password\":\"$USER_PASSWORD\"}")"
+assert_code "authenticate provisioned non-admin Skill owner" "$USER_LOGIN_RESPONSE"
 USER_CSRF="$(csrf_token "$USER_COOKIE")"
 
 make_skill_zip "$REFERENCE_SLUG" 1.0.0 "$WORK_DIR/reference.zip"

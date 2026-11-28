@@ -1,17 +1,18 @@
 # 登录开关与外部账号首次授权
 
-超级管理员在“系统配置”中分别控制本地密码登录和本地账号自行注册，默认都开启。关闭密码登录后，本地注册也暂时不可用，因为当前注册流程会建立本地会话；注册开关的原值会保留。关闭密码登录还会阻止密码重置、密码修改和直接密码认证。已有会话按原有效期结束，不会立刻踢下线。
+超级管理员在“系统配置”中控制本地密码登录，默认开启。本地账号不提供自助注册，注册入口、页面、公开接口及注册开关已移除。初始化管理员和外部身份首次登录的账号创建流程继续保留。关闭密码登录还会阻止密码重置、密码修改和直接密码认证。已有会话按原有效期结束，不会立刻踢下线。
 
 关闭密码登录前，页面会提示可能失去管理入口，但允许继续。部署方应先确认至少有一位超级管理员能通过外部身份登录。若锁定管理入口，使用受控数据库操作恢复 `system_setting` 中 `auth.local` 的 `passwordLoginEnabled`，并记录操作；仅修改启动参数不会覆盖已有数据库设置。
 
+旧版 `auth.local` JSON 中的 `selfRegistrationEnabled` 字段仅读取兼容，不再控制任何功能或通过 API 返回。下一次保存认证设置时只写入 `passwordLoginEnabled`，不需要数据迁移。旧版注册环境变量已失效；升级 Helm 时请从自定义 values 中删除 `auth.initialSettings.selfRegistrationEnabled`。保存新格式设置后，旧版应用无法直接读取，回退应用前需恢复兼容的设置 JSON 并保留审计记录。
+
 ## 空库初始化
 
-全新安装且尚无用户时，启动参数提供初始值。已有用户的实例升级时，若尚无 `auth.local` 记录，首次启动会把两个开关都设为开启，以保持原有登录行为：
+全新安装且尚无用户时，启动参数提供初始值。已有用户的实例升级时，若尚无 `auth.local` 记录，首次启动会开启密码登录，以保持原有登录行为：
 
 | 环境变量 | Helm 值 | 默认值 |
 | --- | --- | --- |
 | `SKILLHUB_AUTH_INITIAL_PASSWORD_LOGIN_ENABLED` | `auth.initialSettings.passwordLoginEnabled` | `true` |
-| `SKILLHUB_AUTH_INITIAL_SELF_REGISTRATION_ENABLED` | `auth.initialSettings.selfRegistrationEnabled` | `true` |
 | `SKILLHUB_AUTH_INITIAL_ROLE_GRANTS_JSON` | `secrets.initialRoleGrantsJson` | `[]` |
 
 首次授权规则的 JSON 示例：

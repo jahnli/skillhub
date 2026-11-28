@@ -3507,22 +3507,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/local/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/local/password-reset/request": {
         parameters: {
             query?: never;
@@ -8783,7 +8767,6 @@ export interface components {
         };
         SystemAuthSettingsUpdateRequest: {
             passwordLoginEnabled: boolean;
-            selfRegistrationEnabled: boolean;
             /** Format: int64 */
             version: number;
         };
@@ -8800,7 +8783,6 @@ export interface components {
         };
         SystemAuthSettingsResponse: {
             passwordLoginEnabled?: boolean;
-            selfRegistrationEnabled?: boolean;
             /** Format: int64 */
             version?: number;
             /** Format: date-time */
@@ -10009,11 +9991,6 @@ export interface components {
             oauthProvider?: string;
             canChangePassword?: boolean;
             platformRoles?: string[];
-        };
-        LocalRegisterRequest: {
-            username: string;
-            password: string;
-            email: string;
         };
         PasswordResetRequestDto: {
             email: string;
@@ -12647,8 +12624,6 @@ export interface components {
         };
         LocalAuthCapabilitiesResponse: {
             passwordLoginEnabled?: boolean;
-            selfRegistrationEnabled?: boolean;
-            registrationAvailable?: boolean;
         };
         AdminUserSummaryResponse: {
             id?: string;
@@ -20613,30 +20588,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SessionBootstrapRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAuthMeResponse"];
-                };
-            };
-        };
-    };
-    register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LocalRegisterRequest"];
             };
         };
         responses: {

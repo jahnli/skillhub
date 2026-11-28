@@ -56,8 +56,8 @@ helm -n skillhub upgrade -i skillhub ./charts/skillhub \
 需要客户端提供回调参数，不能作为设备码授权地址。所有 values 会先经过 `values.schema.json` 和跨字段校验，
 无效的组件、Ingress、HPA 与存储组合会在安装前失败。
 
-首次安装可通过 `auth.initialSettings.passwordLoginEnabled` 和
-`auth.initialSettings.selfRegistrationEnabled` 设置本地认证开关的初始值。
+首次安装可通过 `auth.initialSettings.passwordLoginEnabled` 设置本地密码登录的初始值。
+本地账号不支持自助注册；升级时需从自定义 values 中移除旧注册开关。
 若要预置外部账号首次授权规则，在受保护的 values 中设置
 `secrets.initialRoleGrantsJson`，或在 `existingSecret` 中提供
 `auth-initial-role-grants-json`。这些值仅用于数据库首次初始化；之后在后台

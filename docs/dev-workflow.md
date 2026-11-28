@@ -148,7 +148,13 @@ This will:
 4. Run smoke tests against the API
 5. Print pass/fail summary
 
-`scripts/smoke-test.sh` separates bootstrap creation from smoke credentials.
+`scripts/smoke-test.sh` verifies that the retired self-registration endpoint returns 404.
+For authenticated user checks, supply an already provisioned test account through
+`SMOKE_USERNAME` and `SMOKE_PASSWORD`; without both, that group is reported as skipped.
+Password mutation runs only when `SMOKE_NEW_PASSWORD` is explicitly set; use a disposable
+account because the script leaves that new password in effect. Suite Bundle smoke
+requires these non-admin account credentials as well as administrator credentials.
+Bootstrap creation remains independent of smoke credentials.
 Admin smoke checks run only when `SMOKE_ADMIN_USERNAME` and
 `SMOKE_ADMIN_PASSWORD` are provided. Use `SMOKE_ADMIN_CHECKS=false` when testing
 a persistent environment where the current admin password is not part of the

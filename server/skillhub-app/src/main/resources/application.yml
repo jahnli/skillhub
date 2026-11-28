@@ -223,7 +223,6 @@ skillhub:
   auth:
     initial-settings:
       password-login-enabled: ${SKILLHUB_AUTH_INITIAL_PASSWORD_LOGIN_ENABLED:true}
-      self-registration-enabled: ${SKILLHUB_AUTH_INITIAL_SELF_REGISTRATION_ENABLED:true}
       role-grants-json: '${SKILLHUB_AUTH_INITIAL_ROLE_GRANTS_JSON:[]}'
     mock:
       enabled: ${SKILLHUB_AUTH_MOCK_ENABLED:false}

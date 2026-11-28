@@ -9,10 +9,9 @@ Open `/login` on your instance and use an available method:
 | Method | Prerequisite | Successful outcome |
 | --- | --- | --- |
 | Username and password | Local password login is enabled and you have an account | A browser session is established |
-| Self-registration | The instance allows registration | Submit username, password, and email; success establishes a session |
 | Organization or external login | The provider is configured on the instance | Complete external authentication and return to SkillHub |
 
-A missing registration button is not necessarily a UI failure. The page loads local authentication capabilities and available external methods. Disabling password login or self-registration changes the available entry points. Provider extensibility does not mean every provider is configured.
+Local self-registration is unavailable. The login page loads password-login capabilities and configured external identity methods. Disabling password login hides its entry point. Initial administrator creation and external identity provisioning remain available; provider extensibility does not mean every provider is configured.
 
 Successful login does not grant publishing or administration rights. Account status, platform roles, namespace membership, and resource visibility still govern operations; see [namespace management](./namespace.md).
 

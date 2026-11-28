@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import { csrfHeaders } from './helpers/csrf'
-import { fixtureClientIp } from './helpers/auth-fixtures'
 import { createFreshSession } from './helpers/session'
 
 test.describe('E2E fixture session isolation (Real API)', () => {
@@ -31,11 +30,9 @@ test.describe('E2E fixture session isolation (Real API)', () => {
     expect(invalidCsrf.status()).toBe(403)
   })
 
-  test('fresh-account fixtures do not share one anonymous registration quota', async ({ browser, baseURL }, testInfo) => {
+  test('fresh-account fixtures authenticate independently', async ({ browser, baseURL }, testInfo) => {
     test.setTimeout(30_000)
     const usernames = new Set<string>()
-    // The server's default anonymous registration quota is five per client in five minutes.
-    // Seven independent contexts must remain seven independent fixture clients.
     for (let index = 0; index < 7; index += 1) {
       const context = await browser.newContext({ baseURL })
       try {
@@ -50,22 +47,4 @@ test.describe('E2E fixture session isolation (Real API)', () => {
     expect(usernames.size).toBe(7)
   })
 
-  test('the server still throttles repeated registration attempts from one client', async ({ browser, baseURL }) => {
-    let address: string | undefined
-    for (let index = 0; index < 6; index += 1) {
-      const context = await browser.newContext({ baseURL })
-      try {
-        const page = await context.newPage()
-        address ??= fixtureClientIp(page)
-        const response = await page.request.post('/api/v1/auth/local/register', {
-          // Invalid input consumes the anonymous quota without creating accounts.
-          data: { username: 'x', password: 'invalid', email: 'invalid' },
-          headers: await csrfHeaders(page, { 'X-Forwarded-For': address }),
-        })
-        expect(response.status()).toBe(index < 5 ? 400 : 429)
-      } finally {
-        await context.close()
-      }
-    }
-  })
 })

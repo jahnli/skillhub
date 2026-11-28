@@ -1,3 +1,5 @@
+import { Building2 } from 'lucide-react'
+import styles from './login-actions.module.css'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, getSessionBootstrapRuntimeConfig } from '@/api/client'
@@ -52,7 +54,7 @@ export function SessionBootstrapEntry({ onAuthenticated, methodDisplayName, comp
     return (
       <div className="space-y-3">
         <Button data-analytics-id="auth.sso.request"
-          className="h-11 w-full xl:h-10"
+          className={styles.groupButton}
           type="button"
           disabled={bootstrapMutation.isPending}
           onClick={() => {
@@ -66,9 +68,10 @@ export function SessionBootstrapEntry({ onAuthenticated, methodDisplayName, comp
             })
           }}
         >
+          <Building2 aria-hidden="true" size={17} />
           {bootstrapMutation.isPending
             ? t('login.enterpriseSsoSubmitting', { name: providerName })
-            : t('login.enterpriseContinue')}
+            : t('login.groupAccount')}
         </Button>
 
         {manualError ? (

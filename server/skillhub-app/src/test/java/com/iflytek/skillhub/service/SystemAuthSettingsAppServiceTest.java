@@ -49,7 +49,7 @@ class SystemAuthSettingsAppServiceTest {
         when(settings.findBySettingKey("auth.local")).thenReturn(Optional.of(current));
 
         assertThatThrownBy(() -> service.updateLocalSettings(
-                new SystemAuthSettingsUpdateRequest(false, true, 7L), "admin",
+                new SystemAuthSettingsUpdateRequest(false, 7L), "admin",
                 new AuditRequestContext(null, null)))
                 .isInstanceOf(DomainConflictException.class);
         verify(settings, never()).saveAndFlush(any());
@@ -61,14 +61,15 @@ class SystemAuthSettingsAppServiceTest {
                 Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", true));
         ReflectionTestUtils.setField(current, "id", 1L);
         when(settings.findBySettingKey("auth.local")).thenReturn(Optional.of(current));
-        when(localSettings.current()).thenReturn(new LocalAuthSettings(1L, false, true, 1L, null));
+        when(localSettings.current()).thenReturn(new LocalAuthSettings(1L, false, 1L, null));
 
         var response = service.updateLocalSettings(
-                new SystemAuthSettingsUpdateRequest(false, true, 0L), "admin",
+                new SystemAuthSettingsUpdateRequest(false, 0L), "admin",
                 new AuditRequestContext("127.0.0.1", "test"));
 
         org.assertj.core.api.Assertions.assertThat(response.passwordLoginEnabled()).isFalse();
-        org.assertj.core.api.Assertions.assertThat(current.getValue().get("passwordLoginEnabled")).isEqualTo(false);
+        org.assertj.core.api.Assertions.assertThat(current.getValue()).containsExactlyEntriesOf(
+                Map.of("passwordLoginEnabled", false));
         verify(settings).saveAndFlush(current);
         verify(audit).record(org.mockito.ArgumentMatchers.eq("admin"),
                 org.mockito.ArgumentMatchers.eq("SYSTEM_AUTH_SETTINGS_UPDATE"),

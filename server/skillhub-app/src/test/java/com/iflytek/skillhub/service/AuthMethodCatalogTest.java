@@ -165,7 +165,7 @@ class AuthMethodCatalogTest {
 
     private static LocalAuthSettingsService enabledSettings() {
         LocalAuthSettingsService service = mock(LocalAuthSettingsService.class);
-        when(service.current()).thenReturn(new LocalAuthSettings(1L, true, true, 0L, Instant.EPOCH));
+        when(service.current()).thenReturn(new LocalAuthSettings(1L, true, 0L, Instant.EPOCH));
         return service;
     }
 }

@@ -24,7 +24,7 @@ class LocalAuthSettingsServiceTest {
     @Test
     void separateServiceInstancesObserveCurrentStoredValue() {
         SystemSetting initial = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", true));
+                Map.of("passwordLoginEnabled", true));
         ReflectionTestUtils.setField(initial, "id", 1L);
         AtomicReference<SystemSetting> stored = new AtomicReference<>(initial);
         when(repository.findBySettingKey("auth.local")).thenAnswer(invocation -> Optional.of(stored.get()));
@@ -33,7 +33,7 @@ class LocalAuthSettingsServiceTest {
 
         assertThat(firstInstance.current().passwordLoginEnabled()).isTrue();
         SystemSetting updated = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", false, "selfRegistrationEnabled", true));
+                Map.of("passwordLoginEnabled", false));
         ReflectionTestUtils.setField(updated, "id", 1L);
         stored.set(updated);
 
@@ -41,52 +41,44 @@ class LocalAuthSettingsServiceTest {
         assertThat(firstInstance.current().passwordLoginEnabled()).isFalse();
     }
 
-    @Test
-    void closedPasswordLoginBlocksPasswordAndRegistration() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"true,true", "true,false", "false,true", "false,false"})
+    void legacyRegistrationFlagIsIgnoredWithoutChangingPasswordLogin(boolean login, boolean registration) {
         SystemSetting setting = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", false, "selfRegistrationEnabled", true));
+                Map.of("passwordLoginEnabled", login, "selfRegistrationEnabled", registration));
+        ReflectionTestUtils.setField(setting, "id", 1L);
+        when(repository.findBySettingKey("auth.local")).thenReturn(Optional.of(setting));
+        assertThat(new LocalAuthSettingsService(repository).current().passwordLoginEnabled()).isEqualTo(login);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void singlePasswordSettingControlsLogin(boolean enabled) {
+        SystemSetting setting = new SystemSetting("auth.local", Map.of("passwordLoginEnabled", enabled));
         ReflectionTestUtils.setField(setting, "id", 1L);
         when(repository.findBySettingKey("auth.local")).thenReturn(Optional.of(setting));
         LocalAuthSettingsService service = new LocalAuthSettingsService(repository);
-
-        assertThatThrownBy(service::requirePasswordLogin).isInstanceOf(AuthFlowException.class);
-        assertThatThrownBy(service::requireSelfRegistration).isInstanceOf(AuthFlowException.class);
+        if (enabled) {
+            assertThatCode(service::requirePasswordLogin).doesNotThrowAnyException();
+        } else {
+            assertThatThrownBy(service::requirePasswordLogin).isInstanceOf(AuthFlowException.class)
+                    .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
+        }
     }
 
     @Test
-    void closedRegistrationLeavesPasswordLoginAvailable() {
-        SystemSetting setting = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", false));
-        ReflectionTestUtils.setField(setting, "id", 1L);
-        when(repository.findBySettingKey("auth.local")).thenReturn(Optional.of(setting));
-        LocalAuthSettingsService service = new LocalAuthSettingsService(repository);
-
-        assertThatCode(service::requirePasswordLogin).doesNotThrowAnyException();
-        assertThatThrownBy(service::requireSelfRegistration).isInstanceOf(AuthFlowException.class);
-    }
-
-    @Test
-    void bothEnabledAllowBothFlows() {
-        SystemSetting setting = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", true));
-        ReflectionTestUtils.setField(setting, "id", 1L);
-        when(repository.findBySettingKey("auth.local")).thenReturn(Optional.of(setting));
-        LocalAuthSettingsService service = new LocalAuthSettingsService(repository);
-
-        assertThatCode(service::requirePasswordLogin).doesNotThrowAnyException();
-        assertThatCode(service::requireSelfRegistration).doesNotThrowAnyException();
-    }
-
-    @Test
-    void bothDisabledBlockBothFlows() {
-        SystemSetting setting = new SystemSetting("auth.local",
-                Map.of("passwordLoginEnabled", false, "selfRegistrationEnabled", false));
-        ReflectionTestUtils.setField(setting, "id", 1L);
-        when(repository.findBySettingKey("auth.local")).thenReturn(Optional.of(setting));
-        LocalAuthSettingsService service = new LocalAuthSettingsService(repository);
-
-        assertThatThrownBy(service::requirePasswordLogin).isInstanceOf(AuthFlowException.class);
-        assertThatThrownBy(service::requireSelfRegistration).isInstanceOf(AuthFlowException.class);
+    void malformedOrUnknownSettingsFailClosed() {
+        for (Map<String, Object> value : java.util.List.<Map<String, Object>>of(
+                Map.of(), Map.of("passwordLoginEnabled", "true"),
+                Map.of("passwordLoginEnabled", true, "unknown", true),
+                Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", "true"),
+                Map.of("passwordLoginEnabled", true, "selfRegistrationEnabled", true, "unknown", true))) {
+            when(repository.findBySettingKey("auth.local"))
+                    .thenReturn(Optional.of(new SystemSetting("auth.local", value)));
+            assertThatThrownBy(() -> new LocalAuthSettingsService(repository).current())
+                    .isInstanceOf(AuthFlowException.class)
+                    .extracting("status").isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        }
     }
 
     @Test
