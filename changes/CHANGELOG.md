@@ -10,3 +10,4 @@
 | 004 | 2026-11-28 | 登录页优先展示已配置的集团账号入口，可切换至密码或其他身份源。桌面品牌区使用水晶球展示五类 AI 资产。 | [详情](details/004-login-entry.md) |
 | 005 | 2026-11-28 | 移除本地账号自助注册页面、公开接口及管理和部署开关。已有本地账号仍可按配置登录，外部身份首次登录沿用原准入策略。 | [详情](details/005-retire-self-registration.md) |
 | 006 | 2026-11-29 | 移除本地账号自助找回密码入口和公开发码接口。忘记密码时须由管理员发起重置，旧自助验证码失效。 | [详情](details/006-admin-assisted-password-reset.md) |
+| 007 | 2026-11-29 | 移除全站共享页脚中的品牌介绍、导航分组和版权信息，保留首页源码与文档入口。旧页脚配置仍保留，但不再控制页脚显示；埋点清单同步移除对应链接。 | `web/src/app/layout.tsx`、`web/src/app/layout-console.test.tsx`、`docs/frontend-analytics-manifest.json` |
