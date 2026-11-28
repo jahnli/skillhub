@@ -35,6 +35,7 @@ function Fixture() {
     <label htmlFor="invalid">Version</label><Input id="invalid" aria-invalid="true" aria-describedby="error" /><p id="error">Enter a valid version.</p>
     <Textarea aria-label="Description" aria-invalid="true" />
     <Button data-testid="default-control">Save</Button><Button variant="soft">Soft</Button>
+    <Button data-testid="large-control" size="lg">Large</Button>
     <Button data-testid="class-override" className="h-12">Large caller</Button>
     <Input aria-label="Style override" style={{ height: 52 }} />
     <Card className="shadow-none" data-testid="card"><CardHeader>Card</CardHeader></Card>

@@ -53,7 +53,7 @@ export function MarketSearchControls(props: MarketSearchControlsProps) {
     <Button size="sm" variant="outline" aria-pressed={props.starredOnly}
       data-analytics-id="search.starred.filter" title={t('search.market.onlyFavorites')} onClick={props.onStarredToggle}
       className={cn(
-        'shrink-0 gap-1.5 rounded-full px-3 font-normal text-[hsl(var(--text-secondary))] hover:bg-accent/50',
+        'shrink-0 gap-1.5 px-3 font-normal text-[hsl(var(--text-secondary))] hover:bg-accent/50',
         mobile ? 'absolute right-0 top-1/2 h-7 w-[84px] -translate-y-1/2 text-xs sm:hidden' : 'ml-auto hidden h-8 w-28 text-[13px] sm:inline-flex',
         props.starredOnly && 'border-primary/15 bg-accent font-medium text-accent-foreground hover:bg-accent',
       )}>

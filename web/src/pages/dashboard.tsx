@@ -174,7 +174,7 @@ export function DashboardSidebar({
                 <Link data-analytics-id={item.analyticsId}
                   key={item.key}
                   to={item.to}
-                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-xs font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-xs font-medium ${isActive ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-accent'}`}
                   onClick={() => setMobileOpen(false)}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -228,7 +228,7 @@ export function DashboardSidebar({
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
                     isActive ? 'bg-accent' : 'hover:bg-accent'
                   }`}
-                  style={{ color: isActive ? 'hsl(var(--foreground))' : 'hsl(var(--text-secondary))' }}
+                  style={{ color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--text-secondary))' }}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{t(item.label)}</span>

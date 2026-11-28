@@ -39,7 +39,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
   return (
     <Card
       data-analytics-id={isInteractive ? analyticsId : undefined}
-      className="group relative h-full min-w-0 cursor-pointer overflow-hidden rounded-md border border-border/60 bg-card p-4 text-card-foreground transition-[transform,box-shadow,border-color] duration-150 ease-out card-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15"
+      className="group relative h-full min-w-0 cursor-pointer overflow-hidden border border-border/60 bg-card p-4 text-card-foreground transition-[transform,box-shadow,border-color] duration-150 ease-out card-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15"
       style={{ borderColor: 'hsl(var(--border-card))', boxShadow: 'var(--shadow-card)' }}
       onClick={onClick}
       onKeyDown={(event) => {

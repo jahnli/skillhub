@@ -49,6 +49,13 @@ python3 scripts/read-design-system.py spec task-composition
 
 ## 当前基础映射与验收
 
+产品配色与圆角已采用用户选定的 ai-gateway 默认 Azure Sky 参考；核心包的中性色主题
+作为组件基线保留，不代表当前产品颜色。产品映射使用蓝色主色、淡蓝交互表面、白色亮色
+卡片与炭灰暗色表面；暗色主色为保证链接、软按钮和实心按钮的对比度做了提亮适配。
+实现来源仍是 `web/src/index.css` 与 `web/tailwind.config.ts`，不要为匹配颜色迁移组件运行时。
+产品圆角按角色统一：普通控件共用 `--control-radius`，卡片/弹窗/弹层共用 `--radius`；
+页面 CSS 不再为同类控件设置独立固定圆角。标签、头像与贴边面板保留对应形状。
+
 基础主题使用中文优先字体和亮暗语义色；默认控件32px、compact28px。
 Button 的 xs/sm/default/lg 对应24/28/32/36（default随容器compact变28），icon28。
 非文本 Button 使用键盘 outline，Input/Select/Textarea 使用边框焦点。

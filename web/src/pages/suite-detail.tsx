@@ -87,7 +87,7 @@ export function SuiteDetailPage() {
             {suiteLabels?.length ? (
               <div className="flex flex-wrap gap-2" aria-label={t('suite.assignedLabels')}>
                 {suiteLabels.map(label => (
-                  <span key={label.slug} className="rounded-md border border-indigo-500/20 bg-indigo-500/10 px-2 py-1 text-xs text-indigo-700 dark:text-indigo-300">
+                  <span key={label.slug} className="rounded-md border border-primary/20 bg-primary/10 px-2 py-1 text-xs text-primary">
                     {label.displayName}
                   </span>
                 ))}

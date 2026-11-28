@@ -17,7 +17,7 @@ export function VerdictBadge({ verdict, displayState, compact = false }: Verdict
   }
 
   const styles = {
-    SCANNING: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
+    SCANNING: 'bg-primary/10 text-primary',
     SCAN_FAILED: 'bg-red-500/10 text-red-700 dark:text-red-400',
     SAFE: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     SUSPICIOUS: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',

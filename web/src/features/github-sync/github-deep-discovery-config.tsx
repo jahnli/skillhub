@@ -109,6 +109,6 @@ export function GithubDeepDiscoveryConfig({ configuration, onClose, embedded = f
 
   if (embedded) return <div className="space-y-4">{content}</div>
   return <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-    <DialogContent className="github-sync-surface w-[min(calc(100vw-2rem),42rem)] rounded-md">{content}</DialogContent>
+    <DialogContent className="github-sync-surface w-[min(calc(100vw-2rem),42rem)]">{content}</DialogContent>
   </Dialog>
 }

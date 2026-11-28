@@ -91,7 +91,7 @@ export function MySuitesPage() {
                   ? 'draftMissing'
                   : suiteBundleProblemKind(item.operationStatus, item.failureCode)
                 return <div key={`${item.namespace}/${item.slug}`}
-                  className={cn('grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_5rem_12rem_9rem_8rem] lg:items-center lg:gap-3', !item.suiteId && 'bg-blue-500/[0.025]')}>
+                  className={cn('grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_5rem_12rem_9rem_8rem] lg:items-center lg:gap-3', !item.suiteId && 'bg-primary/[0.025]')}>
                   <div className="min-w-0">
                     <button data-analytics-id={item.suiteId ? 'suite.management.open' : 'suite.operation.open'} type="button" disabled={stale} onClick={() => item.suiteId ? viewSuite(item) : open(item)}
                       className="flex max-w-full items-center gap-2 text-left text-xs font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -105,7 +105,7 @@ export function MySuitesPage() {
                     <span className={cn('inline-flex rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
                       item.state === 'ATTENTION' || item.state === 'REJECTED' ? 'border-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-amber-300'
                         : item.state === 'PUBLISHED' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
-                          : item.state === 'PREPARING' || item.state === 'PENDING_REVIEW' ? 'border-blue-500/20 bg-blue-500/10 text-blue-800 dark:text-blue-300' : 'border-border bg-secondary text-muted-foreground')}>
+                          : item.state === 'PREPARING' || item.state === 'PENDING_REVIEW' ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-secondary text-muted-foreground')}>
                       {item.operationStatus ? t(`suite.bundle.statusLabel.${item.operationStatus}`) : suiteStatusLabel(t, item.state)}
                     </span>
                     {problem && <p className="mt-1 truncate text-[11px] text-foreground/75">{t(`suite.bundle.problem.${problem}.title`)}</p>}

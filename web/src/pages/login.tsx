@@ -98,11 +98,11 @@ export function LoginPage() {
         ) : null}
 
         {hasOrganizationMethod && passwordEnabled ? (
-          <div role="group" aria-label={t('login.loginMode')} className="grid grid-cols-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-900">
-            <button data-analytics-id="auth.personal.select" type="button" aria-pressed={loginMode === 'personal'} onClick={() => setLoginMode('personal')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 xl:h-10 ${loginMode === 'personal' ? 'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-100' : 'text-muted-foreground hover:text-foreground'}`}>
+          <div role="group" aria-label={t('login.loginMode')} className="grid grid-cols-2 rounded-lg border border-border bg-muted p-1">
+            <button data-analytics-id="auth.personal.select" type="button" aria-pressed={loginMode === 'personal'} onClick={() => setLoginMode('personal')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:h-10 ${loginMode === 'personal' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               {t('login.tabPersonal')}
             </button>
-            <button data-analytics-id="auth.enterprise.select" type="button" aria-pressed={loginMode === 'organization'} onClick={() => setLoginMode('organization')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 xl:h-10 ${loginMode === 'organization' ? 'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-100' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button data-analytics-id="auth.enterprise.select" type="button" aria-pressed={loginMode === 'organization'} onClick={() => setLoginMode('organization')} className={`h-11 rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:h-10 ${loginMode === 'organization' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               {t('login.tabEnterprise')}
             </button>
           </div>
@@ -136,7 +136,7 @@ export function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
-                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-300">
+                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-primary hover:underline">
                     {t('login.forgotPassword')}
                   </Link>
                 </div>
@@ -174,7 +174,7 @@ export function LoginPage() {
               {loginMutation.error ? (
                 <p className="text-sm text-red-600">{loginMutation.error.message}</p>
               ) : null}
-              <Button className="h-11 w-full bg-[#315b86] text-white hover:bg-[#25496d] dark:bg-sky-300 dark:text-sky-950 dark:hover:bg-sky-200 xl:h-10" disabled={loginMutation.isPending} type="submit">
+              <Button className="h-11 w-full xl:h-10" disabled={loginMutation.isPending} type="submit">
                 {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
                 <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
               </Button>
@@ -217,7 +217,7 @@ export function LoginPage() {
         {localCapabilities?.registrationAvailable ? <p className="text-center text-sm text-muted-foreground">
           {t('login.noAccount')}
           {' '}
-          <Link data-analytics-id="auth.register.open" to="/register" search={{ returnTo }} className="font-medium text-sky-700 hover:underline dark:text-sky-300">
+          <Link data-analytics-id="auth.register.open" to="/register" search={{ returnTo }} className="font-medium text-primary hover:underline">
             {t('login.register')}
           </Link>
         </p> : null}

@@ -33,10 +33,10 @@ function getCategoryKey(cat: Category): string {
 function CategoryBadge({ category }: { category: NotificationItem['category'] }) {
   const { t } = useTranslation()
   const colorMap: Record<NotificationItem['category'], string> = {
-    PUBLISH: 'bg-blue-100 text-blue-700',
-    REVIEW: 'bg-yellow-100 text-yellow-700',
-    PROMOTION: 'bg-green-100 text-green-700',
-    REPORT: 'bg-red-100 text-red-700',
+    PUBLISH: 'bg-primary/10 text-primary',
+    REVIEW: 'bg-warning/10 text-warning',
+    PROMOTION: 'bg-success/10 text-success',
+    REPORT: 'bg-destructive/10 text-destructive',
   }
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colorMap[category]}`}>
@@ -97,7 +97,7 @@ export function NotificationsPage() {
       />
 
       {/* Category tabs */}
-      <div className="flex gap-1 border-b">
+      <div className="flex flex-wrap gap-1 border-b">
         {CATEGORIES.map((cat) => (
           <button data-analytics-id={cat === 'PUBLISH' ? 'notification.category.publish' : cat === 'REVIEW' ? 'notification.category.review' : cat === 'PROMOTION' ? 'notification.category.promotion' : cat === 'REPORT' ? 'notification.category.report' : 'notification.category.all'}
             key={cat}
@@ -137,7 +137,7 @@ export function NotificationsPage() {
                   >
                     <span
                       className={`mt-2 h-2 w-2 flex-shrink-0 rounded-full ${
-                        item.status === 'UNREAD' ? 'bg-red-500' : 'bg-transparent'
+                        item.status === 'UNREAD' ? 'bg-primary' : 'bg-transparent'
                       }`}
                     />
                     <div className="flex-1 min-w-0">

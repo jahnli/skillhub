@@ -12,7 +12,7 @@ export function SeverityBadge({ severity }: SeverityBadgeProps) {
     CRITICAL: 'bg-red-500/10 text-red-700 dark:text-red-400',
     HIGH: 'bg-orange-500/10 text-orange-700 dark:text-orange-400',
     MEDIUM: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-    LOW: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+    LOW: 'bg-primary/10 text-primary',
     INFO: 'bg-gray-500/10 text-gray-700 dark:text-gray-400',
   }
 

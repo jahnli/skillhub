@@ -64,6 +64,25 @@ test('all-disabled tabs let Tab leave the list', async ({ page }) => {
 
 for (const density of ['regular', 'compact']) {
   for (const theme of ['light', 'dark']) {
+    test(`controls and surfaces inherit one theme: ${theme}/${density}`, async ({ page }) => {
+      await page.goto(`${fixture}?density=${density}&theme=${theme}`)
+      const controls = [page.getByTestId('default-control'), page.getByTestId('large-control'), page.getByLabel('Name', { exact: true }), page.getByLabel('Description')]
+      for (const control of controls) await expect(control).toHaveCSS('border-radius', '9.6px')
+      await expect(page.getByTestId('card')).toHaveCSS('border-radius', '12px')
+
+      // Changing the shared tokens must reach rendered controls and surfaces,
+      // including large buttons, without patching component or page styles.
+      await page.evaluate(() => {
+        document.documentElement.style.setProperty('--radius', '20px')
+        document.documentElement.style.setProperty('--primary', '280 50% 40%')
+        document.documentElement.style.setProperty('--card', '200 25% 40%')
+      })
+      for (const control of controls) await expect(control).toHaveCSS('border-radius', '16px')
+      await expect(page.getByTestId('card')).toHaveCSS('border-radius', '20px')
+      await expect(page.getByTestId('default-control')).toHaveCSS('background-color', 'rgb(119, 51, 153)')
+      await expect(page.getByTestId('card')).toHaveCSS('background-color', 'rgb(77, 111, 128)')
+    })
+
     test(`controls retain density, overrides and visible states: ${theme}/${density}`, async ({ page }) => {
       await page.goto(`${fixture}?density=${density}&theme=${theme}`)
       const padding = density === 'compact' ? '8px' : '12px'
@@ -82,7 +101,15 @@ for (const density of ['regular', 'compact']) {
       await expect(invalid).toHaveAccessibleDescription('Enter a valid version.')
       await normal.focus()
       // The adopted Input contract uses a focus border, not an outer shadow.
-      await expect(normal).toHaveCSS('border-color', theme === 'dark' ? 'rgb(230, 230, 230)' : 'rgb(23, 23, 23)')
+      const focusColor = await page.evaluate(() => {
+        const probe = document.createElement('span')
+        probe.style.color = 'hsl(var(--ring))'
+        document.body.append(probe)
+        const color = getComputedStyle(probe).color
+        probe.remove()
+        return color
+      })
+      await expect(normal).toHaveCSS('border-color', focusColor)
       await expect(normal).toHaveCSS('box-shadow', 'none')
       await expect(normal).toHaveCSS('outline-style', 'none')
       await page.emulateMedia({ reducedMotion: 'reduce' })

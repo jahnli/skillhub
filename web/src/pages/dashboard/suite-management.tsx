@@ -120,13 +120,13 @@ export function SuiteManagementPage() {
         bannerAttention
           ? 'border-amber-500/30 bg-amber-500/5'
           : bannerNeutral
-            ? 'border-blue-500/20 bg-blue-500/5'
+            ? 'border-primary/20 bg-primary/5'
             : 'border-emerald-500/25 bg-emerald-500/5',
       )}>
         {bannerAttention
           ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
           : bannerNeutral
-            ? <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700 dark:text-blue-300" aria-hidden="true" />
+            ? <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />}
         <div className="min-w-0">
           <p className="font-medium leading-5">
@@ -367,7 +367,7 @@ function OperationRows({ operations, locale, suite, compact = false }: {
                   ? 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300'
                   : operation.status === 'SUITE_DRAFT_CREATED'
                     ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                    : 'border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-300',
+                    : 'border-primary/20 bg-primary/10 text-primary',
               )}>
                 {t(`suite.bundle.statusLabel.${operation.status}`)}
               </span>

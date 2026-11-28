@@ -31,8 +31,8 @@ function CopyButton({ text }: { text: string }) {
     <button data-analytics-id="guide.command.copy"
       type="button"
       onClick={handleCopy}
-      className="ml-4 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors hover:bg-white/10"
-      style={{ color: 'var(--code-url, #CBD5E0)' }}
+      className="ml-4 text-xs px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors hover:bg-accent"
+      style={{ color: 'hsl(var(--foreground))' }}
       title={copied ? (t('copyButton.copied') || 'Copied') : (t('copyButton.copy') || 'Copy')}
     >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -43,13 +43,13 @@ function CopyButton({ text }: { text: string }) {
 
 function CodeLine({ line }: { line: string }) {
   if (line.startsWith('#')) {
-    return <span style={{ color: 'var(--code-comment, #A0AEC0)' }}>{line}</span>
+    return <span style={{ color: 'hsl(var(--muted-foreground))' }}>{line}</span>
   }
   if (line.startsWith('export')) {
     return (
       <>
-        <span style={{ color: 'var(--code-keyword, #5EEAD4)' }}>export</span>
-        <span style={{ color: 'var(--code-url, #CBD5E0)' }}>{line.slice(6)}</span>
+        <span style={{ color: 'hsl(var(--primary))' }}>export</span>
+        <span style={{ color: 'hsl(var(--foreground))' }}>{line.slice(6)}</span>
       </>
     )
   }
@@ -57,15 +57,15 @@ function CodeLine({ line }: { line: string }) {
     const eqIdx = line.indexOf('=')
     return (
       <>
-        <span style={{ color: 'var(--code-keyword, #5EEAD4)' }}>{line.slice(0, eqIdx).trim()}</span>
-        <span style={{ color: 'var(--code-url, #CBD5E0)' }}>{` = ${line.slice(eqIdx + 1).trim()}`}</span>
+        <span style={{ color: 'hsl(var(--primary))' }}>{line.slice(0, eqIdx).trim()}</span>
+        <span style={{ color: 'hsl(var(--foreground))' }}>{` = ${line.slice(eqIdx + 1).trim()}`}</span>
       </>
     )
   }
   if (line.startsWith('clawhub')) {
     return (
       <>
-        <span style={{ color: 'var(--code-keyword, #5EEAD4)' }}>clawhub</span>
+        <span style={{ color: 'hsl(var(--primary))' }}>clawhub</span>
         <span>{line.slice(7)}</span>
       </>
     )
@@ -85,7 +85,7 @@ interface CodeBlockProps {
 function CodeBlock({ icon, iconBg, iconColor, title, description, code }: CodeBlockProps) {
   return (
     <div className="code-block overflow-hidden">
-      <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: 'hsl(var(--border))' }}>
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center"
@@ -94,8 +94,8 @@ function CodeBlock({ icon, iconBg, iconColor, title, description, code }: CodeBl
             {icon}
           </div>
           <div>
-            <div className="text-sm font-medium text-white">{title}</div>
-            <div className="text-xs" style={{ color: 'var(--code-comment, #A0AEC0)' }}>
+            <div className="text-sm font-medium text-foreground">{title}</div>
+            <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
               {description}
             </div>
           </div>
@@ -107,7 +107,7 @@ function CodeBlock({ icon, iconBg, iconColor, title, description, code }: CodeBl
           <CopyButton text={code} />
         </div>
       </div>
-      <div className="p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--code-url, #CBD5E0)' }}>
+      <div className="p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'hsl(var(--foreground))' }}>
         {code.split('\n').map((line, i) => (
           <div key={i}>
             <CodeLine line={line} />
@@ -148,24 +148,24 @@ $env:CLAWHUB_REGISTRY = '${baseUrl}'`
   const steps: CodeBlockProps[] = [
     {
       icon: <Settings className="w-4 h-4" strokeWidth={1.5} />,
-      iconBg: 'rgba(94,234,212,0.15)',
-      iconColor: 'var(--code-keyword, #5EEAD4)',
+      iconBg: 'hsl(var(--accent))',
+      iconColor: 'hsl(var(--primary))',
       title: t(`${ns}.quickStart.steps.configureEnv.title`),
       description: t(`${ns}.quickStart.steps.configureEnv.description`),
       code: envCode,
     },
     {
       icon: <Download className="w-4 h-4" strokeWidth={1.5} />,
-      iconBg: 'rgba(96,165,250,0.15)',
-      iconColor: '#60A5FA',
+      iconBg: 'hsl(var(--accent))',
+      iconColor: 'hsl(var(--primary))',
       title: t(`${ns}.quickStart.steps.installSkills.title`),
       description: t(`${ns}.quickStart.steps.installSkills.description`),
       code: installCode,
     },
     {
       icon: <Upload className="w-4 h-4" strokeWidth={1.5} />,
-      iconBg: 'rgba(167,139,250,0.15)',
-      iconColor: '#A78BFA',
+      iconBg: 'hsl(var(--accent))',
+      iconColor: 'hsl(var(--primary))',
       title: t(`${ns}.quickStart.steps.publishSkills.title`),
       description: t(`${ns}.quickStart.steps.publishSkills.description`),
       code: publishCode,

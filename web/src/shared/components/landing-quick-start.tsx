@@ -76,7 +76,7 @@ function AgentAccessPanel() {
           <div className="flex flex-col gap-5 border-y border-border/70 py-5 sm:flex-row sm:items-start">
             <span className="mt-1 hidden h-12 w-1 flex-shrink-0 bg-foreground sm:block" aria-hidden />
             <p className="min-w-0 flex-1 text-sm leading-7 text-foreground">
-              {t('landing.experience.quickStart.agent.instructionPrefix')} <span className="break-all text-blue-600 underline decoration-blue-300 underline-offset-4">{registryUrl}/registry/skill.md</span> {t('landing.experience.quickStart.agent.instructionSuffix')}
+              {t('landing.experience.quickStart.agent.instructionPrefix')} <span className="break-all text-primary underline decoration-primary/40 underline-offset-4">{registryUrl}/registry/skill.md</span> {t('landing.experience.quickStart.agent.instructionSuffix')}
             </p>
             <button data-analytics-id="guide.prompt.copy"
               type="button"
@@ -85,7 +85,7 @@ function AgentAccessPanel() {
                   toast.error(t('landing.experience.quickStart.copyErrorTitle'), t('landing.experience.quickStart.agent.copyErrorDescription'))
                 })
               }}
-              className="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-xs font-semibold text-background shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none"
+              className="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.agent.copyInstruction')}
@@ -151,7 +151,7 @@ function CliAccessPanel() {
   return (
     <div className="flex min-h-[380px] flex-col overflow-hidden rounded-2xl border border-border/70 shadow-sm">
       {/* Terminal title bar */}
-      <div className="flex items-center justify-between border-b border-border/60 bg-white px-4 py-3 dark:bg-neutral-900">
+      <div className="flex items-center justify-between border-b border-border/60 bg-card px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -168,17 +168,17 @@ function CliAccessPanel() {
       </div>
 
       {/* Terminal content */}
-      <div className="flex-1 overflow-auto bg-[#fafafa] p-4 font-mono text-[12px] leading-[1.7] dark:bg-neutral-950">
+      <div className="flex-1 overflow-auto bg-muted p-4 font-mono text-[12px] leading-[1.7]">
         {/* Version check */}
         <div className="mb-3">
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 --version</span>
+              <span className="text-foreground">npx -y @astron-team/skillhub@0.1.12 --version</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
                 onClick={() => handleCopy('npx -y @astron-team/skillhub@0.1.12 --version', 0)}
-                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-accent hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {copiedIdx === 0 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {copiedIdx === 0 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
@@ -193,36 +193,36 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 search weather \</span>
+              <span className="text-foreground">npx -y @astron-team/skillhub@0.1.12 search weather \</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
                 onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 search weather --registry ${registryUrl} --limit 5`, 1)}
-                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-accent hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {copiedIdx === 1 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {copiedIdx === 1 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
               </button>
             </div>
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --registry'} </span>
-            <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span> \
+            <span className="break-all text-primary">{registryUrl}</span> \
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --limit'} </span>
-            <span className="text-neutral-800 dark:text-neutral-200">5</span>
+            <span className="text-foreground">5</span>
           </div>
           <div className="mt-1 space-y-0.5 pl-5">
             <div className="text-[11px] text-muted-foreground">{t('landing.experience.quickStart.cli.skillsFound')}</div>
             <div className="flex gap-4">
-              <span className="text-blue-600 dark:text-blue-400">@global/weather</span>
+              <span className="text-primary">@global/weather</span>
               <span className="text-muted-foreground">v1.3.0</span>
-              <span className="text-neutral-600 dark:text-neutral-400">{t('landing.experience.demoSkills.weather')}</span>
+              <span className="text-muted-foreground">{t('landing.experience.demoSkills.weather')}</span>
             </div>
             <div className="flex gap-4">
-              <span className="text-blue-600 dark:text-blue-400">@global/forecast</span>
+              <span className="text-primary">@global/forecast</span>
               <span className="text-muted-foreground">v2.1.0</span>
-              <span className="text-neutral-600 dark:text-neutral-400">{t('landing.experience.quickStart.cli.forecastSummary')}</span>
+              <span className="text-muted-foreground">{t('landing.experience.quickStart.cli.forecastSummary')}</span>
             </div>
           </div>
         </div>
@@ -232,24 +232,24 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 install @global/weather \</span>
+              <span className="text-foreground">npx -y @astron-team/skillhub@0.1.12 install @global/weather \</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
                 onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
-                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-accent hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {copiedIdx === 2 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {copiedIdx === 2 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
               </button>
             </div>
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --dir'} </span>
-            <span className="text-neutral-800 dark:text-neutral-200">./skills</span> \
+            <span className="text-foreground">./skills</span> \
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --registry'} </span>
-            <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span>
+            <span className="break-all text-primary">{registryUrl}</span>
           </div>
           <div className="mt-1 flex items-center gap-1.5 pl-5 text-[11px] text-emerald-600 dark:text-emerald-400">
             <Check className="h-3 w-3" strokeWidth={2.5} />
@@ -260,12 +260,12 @@ function CliAccessPanel() {
         {/* Cursor */}
         <div className="flex items-center gap-2">
           <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
-          <span className="inline-block h-3.5 w-2 animate-pulse bg-neutral-700 dark:bg-neutral-400" />
+          <span className="inline-block h-3.5 w-2 animate-pulse bg-muted-foreground" />
         </div>
       </div>
 
       {/* Bottom status bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-white px-4 py-2.5 text-[11px] dark:bg-neutral-900">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-card px-4 py-2.5 text-[11px]">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -274,7 +274,7 @@ function CliAccessPanel() {
           <span className="text-border">·</span>
           <span className="break-all font-mono">registry: {registryUrl}</span>
         </div>
-        <a data-analytics-id="navigation.cli.open" href={presentationLinkUrl(settings, 'cliDocumentation')} target="_blank" rel="noreferrer" className="group flex items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-blue-400 dark:hover:text-blue-300">
+        <a data-analytics-id="navigation.cli.open" href={presentationLinkUrl(settings, 'cliDocumentation')} target="_blank" rel="noreferrer" className="group flex items-center gap-1 font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {t('landing.experience.quickStart.cli.docs')}
           <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none" />
         </a>
@@ -322,7 +322,7 @@ function WebAccessPanel() {
               <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">weather <span className="font-mono text-xs font-normal text-muted-foreground">@global</span></h3>
               <p className="mt-1 text-xs text-muted-foreground">{t('landing.experience.quickStart.web.summary')}</p>
             </div>
-            <a data-analytics-id="guide.package.download" href={buildApiUrl(`${WEB_API_PREFIX}/skills/global/weather/download`)} className="inline-flex w-fit items-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-xs font-semibold text-background shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none">
+            <a data-analytics-id="guide.package.download" href={buildApiUrl(`${WEB_API_PREFIX}/skills/global/weather/download`)} className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none">
               <Download className="h-3.5 w-3.5" />{t('landing.experience.quickStart.web.download')}
             </a>
           </div>

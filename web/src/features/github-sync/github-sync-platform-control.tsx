@@ -40,7 +40,7 @@ export function GithubSyncPlatformControl({ visible }: { visible: boolean }) {
       <Button data-analytics-id={paused ? 'github.platform.resume.request' : 'github.platform.pause.request'} size="sm" variant={paused ? 'outline' : 'default'} disabled={!control.data || update.isPending} onClick={() => setConfirm(true)}>{t(paused ? 'githubSync.resumePlatform' : 'githubSync.pausePlatform')}</Button>
     </Card>
     <Dialog open={confirm} onOpenChange={setConfirm}>
-      <DialogContent closeAnalyticsId={paused ? 'github.platform.resume.cancel' : 'github.platform.pause.cancel'} className="github-sync-surface rounded-md"><DialogHeader><DialogTitle>{t(paused ? 'githubSync.resumePlatform' : 'githubSync.pausePlatform')}</DialogTitle><DialogDescription>{t(paused ? 'githubSync.resumePlatformHelp' : 'githubSync.pausePlatformHelp')}</DialogDescription></DialogHeader>
+      <DialogContent closeAnalyticsId={paused ? 'github.platform.resume.cancel' : 'github.platform.pause.cancel'} className="github-sync-surface"><DialogHeader><DialogTitle>{t(paused ? 'githubSync.resumePlatform' : 'githubSync.pausePlatform')}</DialogTitle><DialogDescription>{t(paused ? 'githubSync.resumePlatformHelp' : 'githubSync.pausePlatformHelp')}</DialogDescription></DialogHeader>
         <DialogFooter><Button data-analytics-id={paused ? 'github.platform.resume.cancel' : 'github.platform.pause.cancel'} variant="outline" onClick={() => setConfirm(false)}>{t('githubSync.cancel')}</Button><Button data-analytics-id={paused ? 'github.platform.resume.confirm' : 'github.platform.pause.confirm'} disabled={update.isPending} onClick={() => void save()}>{t('githubSync.confirmControl')}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

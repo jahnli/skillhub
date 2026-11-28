@@ -49,7 +49,7 @@ export function ReviewCenterFilterForm({ value, namespaces, namespaceLoading, on
     </div>
   )
   return (
-    <form onSubmit={submit} className="rounded-[10px] bg-secondary p-5" aria-label={t('reviewCenter.filters.title')}>
+    <form onSubmit={submit} className="rounded-lg bg-secondary p-5" aria-label={t('reviewCenter.filters.title')}>
       <h2 className="mb-5 text-[15px] font-semibold">{t('reviewCenter.filters.title')}</h2>
       <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4 md:flex md:flex-wrap md:items-end">

@@ -102,7 +102,7 @@ export function FilePreviewDialog({
                 data-analytics-id={copyAnalyticsId}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-lg opacity-60 hover:opacity-100 hover:bg-accent transition-all duration-200 active:scale-95"
+                className="h-8 w-8 opacity-60 hover:opacity-100 hover:bg-accent transition-all duration-200 active:scale-95"
                 onClick={handleCopy}
                 title={t('filePreview.copy')}
                 disabled={copyState !== 'idle'}
@@ -116,7 +116,7 @@ export function FilePreviewDialog({
               data-analytics-id={downloadAnalyticsId}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg opacity-60 hover:opacity-100 hover:bg-accent transition-all duration-200 hover:scale-110 active:scale-95"
+              className="h-8 w-8 opacity-60 hover:opacity-100 hover:bg-accent transition-all duration-200 hover:scale-110 active:scale-95"
               onClick={onDownload}
               title={t('filePreview.downloadHint', { name: node.name })}
             >
@@ -126,7 +126,7 @@ export function FilePreviewDialog({
               data-analytics-id={closeAnalyticsId}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all duration-200 hover:rotate-90 active:scale-95"
+              className="h-8 w-8 opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all duration-200 hover:rotate-90 active:scale-95"
               onClick={() => onOpenChange(false)}
               title={t('filePreview.close')}
             >

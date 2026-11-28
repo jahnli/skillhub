@@ -1,6 +1,6 @@
 .github-catalog-page { max-width: 75rem; min-height: calc(100dvh - 9rem); margin-inline: auto; }
 .github-repository-layout { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.5rem; align-items: start; }
-.github-repository-body { min-width: 0; min-height: 34rem; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: .875rem; background: hsl(var(--card)); }
+.github-repository-body { min-width: 0; min-height: 34rem; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius:var(--radius); background: hsl(var(--card)); }
 .github-repository-sidebar { grid-column: 2; grid-row: 1; min-width: 0; }
 .github-repository-body > [role="tabpanel"] { border: 0; margin: 0; }
 .github-repository-body > [role="tablist"] { padding-inline: 1.25rem; }

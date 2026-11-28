@@ -506,7 +506,7 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
               <h2 className="text-base font-semibold">{t('suite.selectSkills')}</h2>
               <p className="mt-1 text-xs text-muted-foreground">{t('suite.memberSearchDescription')}</p>
             </div>
-            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-700 dark:text-blue-300">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
               {t('suite.searchOnSubmitHint')}
             </span>
           </div>

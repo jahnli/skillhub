@@ -58,7 +58,7 @@ export function GithubAdmissionConfig({ policy }: { policy: GithubSyncAdmissionP
       <div><span className="text-muted-foreground">{t('githubSync.platformPendingCandidates')}</span><p className="font-semibold">{policy.platformPendingCandidateCount ?? '—'} / {policy.candidatePendingLimit}</p></div>
     </div>
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent closeAnalyticsId="github.admission.cancel" className="github-sync-surface w-[min(calc(100vw-2rem),42rem)] rounded-md">
+      <DialogContent closeAnalyticsId="github.admission.cancel" className="github-sync-surface w-[min(calc(100vw-2rem),42rem)]">
         <DialogHeader><DialogTitle>{t('githubSync.capacityTitle')}</DialogTitle><DialogDescription>{t('githubSync.capacityConfigHelp')}</DialogDescription></DialogHeader>
         <form data-analytics-id="github.admission.save" onSubmit={save} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,25 +1,28 @@
-/* Page-local density follows the confirmed My Skills prototype, not shared UI defaults. */
+/* Keep page density; theme colors and radii come from the shared product tokens. */
 .page .filterPanel {
-  border-radius: 12px;
+  border-radius: var(--radius);
   margin-top: 26px;
   padding: 16px;
-  background: #fafafa;
-  border-color: #e9e9ed;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
 .page .filterControl {
   height: 40px;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   font-size: 13px;
   box-shadow: none;
-  border-color: #dedee5;
+  border-color: hsl(var(--border));
 }
+
+.page .filterControl:focus { border-color: hsl(var(--ring)); }
+.page .filterControl[aria-invalid="true"] { border-color: hsl(var(--destructive)); }
 
 .page .filterButton {
   height: 32px;
   min-width: 85px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--control-radius);
   font-size: 12px;
   box-shadow: none;
 }
@@ -38,9 +41,9 @@
 
 .page .skillCard {
   padding: 14px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   box-shadow: none;
-  border-color: #dedee5;
+  border-color: hsl(var(--border));
 }
 
 .page .skillTitle {
@@ -54,32 +57,27 @@
   display: inline-flex;
   margin: 0;
   padding: 0 7px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 10px;
   font-weight: 500;
   line-height: 20px;
-  color: #666670;
-  background: #f1f2f4;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
 }
 
-.page .statusPublished { color: #357548; background: #eef7f0; }
-.page .statusReview { color: #8b631f; background: #fff5e6; }
-.page .statusRejected { color: #a64d46; background: #fff0ef; }
-
-:global(.dark) .page .status { color: #b9b9c2; background: #303039; }
-:global(.dark) .page .statusPublished { color: #97d5ac; background: #193329; }
-:global(.dark) .page .statusReview { color: #e7bf78; background: #3b2d19; }
-:global(.dark) .page .statusRejected { color: #efa49b; background: #402625; }
+.page .statusPublished { color: hsl(var(--success)); background: hsl(var(--success) / .1); }
+.page .statusReview { color: hsl(var(--warning)); background: hsl(var(--warning) / .1); }
+.page .statusRejected { color: hsl(var(--destructive)); background: hsl(var(--destructive) / .1); }
 
 .page .description {
   font-size: 12px;
   line-height: 20px;
-  color: #666670;
+  color: hsl(var(--muted-foreground));
 }
 
 .page .cardContent { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 32px 20px auto; gap: 8px; }
 .page .cardHeader { min-width: 0; min-height: 32px; }
-.page .infoButton { display: inline-flex; align-items: center; gap: 4px; min-width: 0; height: 18px; flex: 1 1 90px; text-align: left; border-radius: 3px; }
+.page .infoButton { display: inline-flex; align-items: center; gap: 4px; min-width: 0; height: 18px; flex: 1 1 90px; text-align: left; border-radius: var(--radius-sm); }
 .page .infoButton:hover { color: hsl(var(--foreground)); }
 .page .infoButton:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 .page .visibility { max-width: 125px; }
@@ -95,7 +93,7 @@
   gap: 6px 12px;
   font-size: 11px;
   line-height: 18px;
-  color: #73737d;
+  color: hsl(var(--muted-foreground));
 }
 
 .page .metadataItem {
@@ -105,15 +103,13 @@
   min-width: 0;
 }
 
-.page .coordinate { flex: 0 1 210px; max-width: 210px; color: #60738d; }
-:global(.dark) .page .coordinate { color: #a1b5d0; }
-.page .pendingVersion { color: #8b631f; }
-:global(.dark) .page .pendingVersion { color: #d9b77e; }
+.page .coordinate { flex: 0 1 210px; max-width: 210px; color: hsl(var(--primary)); }
+.page .pendingVersion { color: hsl(var(--warning)); }
 
 .page .updateButton,
 .page .moreButton {
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   box-shadow: none;
   font-size: 12px;
 }
@@ -129,15 +125,9 @@
   .page .coordinate { max-width: 150px; }
 }
 
-:global(.dark) .page .filterPanel { background: hsl(var(--muted) / .3); border-color: hsl(var(--border) / .6); }
-:global(.dark) .page .skillCard,
-:global(.dark) .page .filterControl { border-color: hsl(var(--border) / .7); }
-:global(.dark) .page .description,
-:global(.dark) .page .metadata { color: hsl(var(--muted-foreground)); }
-
 .page h1 { font-size: 27px; line-height: 36px; font-weight: 500; letter-spacing: -.8px; }
-.page .publishButton { height: 36px; padding: 0 12px; border-radius: 8px; font-size: 12px; }
-.moreMenu.moreMenu { width: 208px; padding: 6px; border-radius: 10px; }
+.page .publishButton { height: 36px; padding: 0 12px; border-radius: var(--control-radius); font-size: 12px; }
+.moreMenu.moreMenu { width: 208px; padding: 6px; border-radius: var(--radius); }
 .moreMenu [role="menuitem"] { min-height: 36px; padding: 0 10px; font-size: 12px; }
 
 @media (max-width: 767px) {
@@ -158,8 +148,7 @@
 
 .page .skillList { margin-top: 20px; gap: 16px; }
 .page h1 + p { font-size: 13px; line-height: 20px; }
-.page .skillCard:hover { border-color: #c7c7d1; }
-:global(.dark) .page .skillCard:hover { border-color: hsl(var(--border)); }
+.page .skillCard:hover { border-color: hsl(var(--primary) / .3); }
 .page .updateButton:hover,
 .page .moreButton:hover,
 .page .publishButton { box-shadow: none; }
@@ -167,11 +156,7 @@
 .page .publishButton svg,
 .moreMenu svg { stroke-width: 1.65; }
 
-.page .filterControl::placeholder { color: #73737d; opacity: 1; }
-:global(.dark) .page .filterControl::placeholder { color: #aaaab5; }
+.page .filterControl::placeholder { color: hsl(var(--text-placeholder)); opacity: 1; }
 .moreMenu .dangerAction,
 .moreMenu .dangerAction:focus,
-.moreMenu .dangerAction[data-highlighted] { color: #b42318; }
-:global(.dark) .moreMenu .dangerAction,
-:global(.dark) .moreMenu .dangerAction:focus,
-:global(.dark) .moreMenu .dangerAction[data-highlighted] { color: #ffb4ab; }
+.moreMenu .dangerAction[data-highlighted] { color: hsl(var(--destructive)); }

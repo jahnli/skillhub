@@ -69,7 +69,7 @@ export function GithubCredentialConfig() {
         <Button data-analytics-id="github.credential.create" size="sm" className="sync-action" onClick={openCreate}>{t('githubSync.addCredential')}</Button>
       </div>
       <Dialog open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); if (!nextOpen) reset() }}>
-        <DialogContent closeAnalyticsId={editingId ? 'github.credential.replace.cancel' : 'github.credential.create.cancel'} className="github-sync-surface rounded-md">
+        <DialogContent closeAnalyticsId={editingId ? 'github.credential.replace.cancel' : 'github.credential.create.cancel'} className="github-sync-surface">
           <DialogHeader><DialogTitle>{editingId ? t('githubSync.replaceCredential') : t('githubSync.addCredential')}</DialogTitle><DialogDescription>{t('githubSync.credentialHelp')}</DialogDescription></DialogHeader>
           <form data-analytics-id={editingId ? 'github.credential.replace.submit' : 'github.credential.create.submit'} onSubmit={save} className="space-y-3">
             <label className="block text-sm">{t('githubSync.credentialLabel')}

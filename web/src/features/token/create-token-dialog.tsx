@@ -171,7 +171,7 @@ export function CreateTokenDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className={cn(
-          'flex max-h-[min(90dvh,56rem)] flex-col gap-0 overflow-hidden rounded-xl p-0',
+          'flex max-h-[min(90dvh,56rem)] flex-col gap-0 overflow-hidden p-0',
           createdToken
             ? 'w-[min(calc(100vw-2rem),42.5rem)]'
             : 'w-[min(calc(100vw-2rem),42.5rem)]',

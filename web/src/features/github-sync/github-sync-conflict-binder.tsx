@@ -50,7 +50,7 @@ export function GithubSyncConflictBinder({ path, namespaceSlug }: {
         {t(pathMove ? 'githubSync.resolvePathMove' : 'githubSync.resolveConflict')}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent closeAnalyticsId={pathMove ? 'github.binding.pathmove.cancel' : 'github.binding.conflict.cancel'} className="github-sync-surface rounded-md">
+        <DialogContent closeAnalyticsId={pathMove ? 'github.binding.pathmove.cancel' : 'github.binding.conflict.cancel'} className="github-sync-surface">
           <DialogHeader>
             <DialogTitle>{t(pathMove ? 'githubSync.confirmPathMoveTitle' : 'githubSync.bindExistingTitle')}</DialogTitle>
             <DialogDescription>{pathMove

@@ -41,10 +41,10 @@ describe('SeverityBadge', () => {
     expect(html).toContain('text-amber-700')
   })
 
-  it('applies the blue color classes for LOW severity', () => {
+  it('uses the shared primary color for LOW severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="LOW" />)
 
-    expect(html).toContain('text-blue-700')
+    expect(html).toContain('text-primary')
   })
 
   it('applies the gray color classes for INFO severity', () => {

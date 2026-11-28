@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import type { CSSProperties } from 'react'
 import { Toaster as Sonner } from 'sonner'
 import { getPortalContainer } from '@/shared/lib/portal-container'
 import { CENTER_TOASTER_ID } from '@/shared/lib/toast'
@@ -12,6 +13,7 @@ export function Toaster() {
         className="!left-1/2 !right-auto !top-4 !-translate-x-1/2 !z-[100]"
         offset={16}
         mobileOffset={16}
+        style={{ '--border-radius': 'var(--radius)' } as CSSProperties}
         toastOptions={{
           toasterId: CENTER_TOASTER_ID,
           classNames: {
@@ -22,9 +24,9 @@ export function Toaster() {
             actionButton: 'bg-primary text-primary-foreground',
             cancelButton: 'bg-muted text-muted-foreground',
             error: 'border-destructive/40',
-            success: 'border-emerald-500/40',
-            warning: 'border-amber-500/40',
-            info: 'border-blue-500/40',
+            success: 'border-success/40',
+            warning: 'border-warning/40',
+            info: 'border-info/40',
           },
         }}
       />

@@ -176,7 +176,7 @@ function EnterpriseSection() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {presentationItemVisible(settings, 'enterprise', 'deployment') && <div className="md:col-span-2 md:row-span-2 flex flex-col rounded-xl border border-border/70 bg-card p-6 shadow-[var(--shadow-card)]">
             <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Server className="h-4 w-4" />
               </div>
               <h3 className="font-semibold text-foreground">{text('enterprise', 'deploymentTitle')}</h3>
@@ -197,7 +197,7 @@ function EnterpriseSection() {
                 </div>
                 <div className="flex flex-col items-center sm:flex-shrink-0">
                   <div className="mb-0.5 text-center text-[10px] text-muted-foreground">{text('enterprise', 'serviceLayer')}</div>
-                  <div className="rounded-lg bg-neutral-900 px-3.5 py-3 text-center text-xs font-semibold leading-tight text-white">{text('enterprise', 'registryLabel').split('\n').map((line, index) => <span key={index} className="block [overflow-wrap:anywhere]">{line}</span>)}</div>
+                  <div className="rounded-lg bg-primary px-3.5 py-3 text-center text-xs font-semibold leading-tight text-primary-foreground">{text('enterprise', 'registryLabel').split('\n').map((line, index) => <span key={index} className="block [overflow-wrap:anywhere]">{line}</span>)}</div>
                 </div>
                 <div className="flex h-8 items-center justify-center sm:h-auto sm:min-w-0 sm:flex-1">
                   <svg className="h-4 w-16 rotate-90 text-border sm:w-full sm:max-w-16 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 64 16"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" strokeDasharray="3 3" d="M0 8h54" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M50 4l6 4-6 4" /></svg>
@@ -370,7 +370,7 @@ function LandingIntroduction() {
         <div className={`${APP_FRAME_CLASS_NAME} grid grid-cols-1 items-start gap-12 ${presentationItemVisible(settings, 'hero', 'preview') ? 'lg:grid-cols-2' : ''} lg:items-center lg:gap-16`}>
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/70 bg-secondary/80 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               {text('hero', 'badge')}
             </div>
 

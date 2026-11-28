@@ -60,7 +60,7 @@ export function GithubScheduleConfig({ policy }: { policy: GithubSyncSchedulePol
     </div>
     {policy.repositoryHours == null ? <p className="text-xs text-muted-foreground">{t('githubSync.scheduleLegacy', { interval: policy.effectiveRepositoryInterval })}</p> : null}
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent closeAnalyticsId="github.schedule.cancel" className="github-sync-surface w-[min(calc(100vw-2rem),38rem)] rounded-md">
+      <DialogContent closeAnalyticsId="github.schedule.cancel" className="github-sync-surface w-[min(calc(100vw-2rem),38rem)]">
         <DialogHeader><DialogTitle>{t('githubSync.scheduleTitle')}</DialogTitle><DialogDescription>{t('githubSync.scheduleHelp')}</DialogDescription></DialogHeader>
         <form data-analytics-id="github.schedule.save" onSubmit={save} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">

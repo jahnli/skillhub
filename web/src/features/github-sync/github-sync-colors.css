@@ -1,29 +1,18 @@
 .github-sync-surface {
-  --sync-teal: #0b7169;
-  --sync-blue: #2859a8;
-  --sync-amber: #9a5a08;
-  --sync-red: #b03a35;
+  --sync-teal: hsl(var(--success));
+  --sync-blue: hsl(var(--primary));
+  --sync-amber: hsl(var(--warning));
+  --sync-red: hsl(var(--destructive));
   --sync-ink: hsl(var(--card-foreground));
   --sync-subtle: hsl(var(--muted-foreground));
   --sync-line: hsl(var(--border));
   --sync-canvas: hsl(var(--secondary));
   --sync-panel: hsl(var(--card));
-  --sync-teal-soft: #e5f3ef;
-  --sync-blue-soft: #e9f0fb;
-  --sync-amber-soft: #fff2d9;
-  --sync-red-soft: #fcebea;
+  --sync-teal-soft: hsl(var(--success) / .1);
+  --sync-blue-soft: hsl(var(--accent));
+  --sync-amber-soft: hsl(var(--warning) / .1);
+  --sync-red-soft: hsl(var(--destructive) / .1);
   color: var(--sync-ink);
-}
-
-.dark .github-sync-surface {
-  --sync-teal: #72d7c8;
-  --sync-blue: #9dbcf7;
-  --sync-amber: #f3c477;
-  --sync-red: #f2a39d;
-  --sync-teal-soft: #173d39;
-  --sync-blue-soft: #253954;
-  --sync-amber-soft: #42341f;
-  --sync-red-soft: #482c2e;
 }
 
 .github-sync-surface .sync-hero {
@@ -33,7 +22,7 @@
 
 .github-sync-surface .sync-section {
   border: 1px solid var(--sync-line);
-  border-radius: 0.25rem;
+  border-radius: var(--radius);
   background: var(--sync-panel);
   box-shadow: none !important;
 }
@@ -74,7 +63,7 @@
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--sync-line);
-  border-radius: 0.2rem;
+  border-radius: var(--radius-sm);
   background: var(--sync-canvas);
   padding: 0.2rem 0.45rem;
   color: var(--sync-subtle);
@@ -98,26 +87,29 @@
 .github-sync-surface select {
   height: 2.125rem;
   border: 1px solid var(--sync-line);
-  border-radius: 0.2rem;
+  border-radius: var(--control-radius);
   background: var(--sync-panel);
   box-shadow: none;
 }
 
 .github-sync-surface textarea {
   border: 1px solid var(--sync-line);
-  border-radius: 0.2rem;
+  border-radius: var(--control-radius);
   background: var(--sync-panel);
   box-shadow: none;
 }
 
-.github-sync-surface input:focus-visible,
-.github-sync-surface select:focus-visible,
-.github-sync-surface textarea:focus-visible {
-  border-color: var(--sync-teal);
-  outline: 2px solid var(--sync-teal);
-  outline-offset: 1px;
+.github-sync-surface input:not([type='checkbox']):not([type='radio']):focus,
+.github-sync-surface select:focus,
+.github-sync-surface textarea:focus {
+  border-color: hsl(var(--ring));
+  outline: none;
   box-shadow: none;
 }
+
+.github-sync-surface input[aria-invalid='true'],
+.github-sync-surface select[aria-invalid='true'],
+.github-sync-surface textarea[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
 
 .github-sync-surface .sync-preview {
   border-left: 3px solid var(--sync-blue);
@@ -131,9 +123,9 @@
 }
 
 .github-sync-surface .sync-tabs [data-state='active'] {
-  border-bottom: 3px solid var(--sync-teal);
+  border-bottom: 3px solid hsl(var(--primary));
   border-radius: 0;
-  color: var(--sync-teal);
+  color: hsl(var(--primary));
   box-shadow: none;
 }
 

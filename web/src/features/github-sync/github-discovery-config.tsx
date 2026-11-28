@@ -173,7 +173,7 @@ export function GithubDiscoveryConfig({ layout = 'default' }: { layout?: 'defaul
         </div>
       </div>
       <Dialog open={mode !== null} onOpenChange={(open) => { if (!open) closeForm() }}>
-        <DialogContent closeAnalyticsId={mode === 'owner' ? 'github.owner.cancel' : editingRuleId ? 'github.rule.edit.cancel' : 'github.rule.create.cancel'} className="github-sync-surface w-[min(calc(100vw-2rem),60rem)] rounded-md">
+        <DialogContent closeAnalyticsId={mode === 'owner' ? 'github.owner.cancel' : editingRuleId ? 'github.rule.edit.cancel' : 'github.rule.create.cancel'} className="github-sync-surface w-[min(calc(100vw-2rem),60rem)]">
           <DialogHeader>
             <DialogTitle>{t(mode === 'repository' ? 'githubSync.addRepository' : mode === 'owner' ? 'githubSync.addOwner' : editingRuleId ? 'githubSync.editRule' : 'githubSync.addRule')}</DialogTitle>
             <DialogDescription>{t(mode === 'repository' ? 'githubSync.repositoryHelp' : mode === 'owner' ? 'githubSync.ownerHelp' : 'githubSync.ruleHelp')}</DialogDescription>

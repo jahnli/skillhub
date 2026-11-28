@@ -56,16 +56,16 @@ export function HomePage() {
           <SearchBar analyticsId="search.query.submit" onSearch={handleSearch} />
         </div>
 
-        <div className="flex items-center justify-center gap-4 animate-fade-up delay-2">
+        <div className="flex flex-wrap items-center justify-center gap-4 animate-fade-up delay-2">
           <button data-analytics-id="navigation.skills.open"
-            className="px-8 py-3.5 rounded-xl text-base font-medium text-white bg-[#202020] shadow-sm hover:bg-[#111] transition-colors"
+            className="px-8 py-3.5 rounded-md text-base font-medium text-primary-foreground bg-primary shadow-sm hover:bg-primary/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             onClick={() => navigate({ to: '/search', search: { q: '', sort: 'relevance', page: 0, starredOnly: false } })}
           >
             {t('home.browseSkills')}
           </button>
           <button data-analytics-id="skill.publish.open"
-            className="px-8 py-3.5 rounded-xl text-base font-medium border transition-colors"
-            style={{ background: 'var(--bg-secondary-btn, #F7FAFC)', borderColor: 'hsl(var(--muted-foreground))', color: 'hsl(var(--muted-foreground))' }}
+            className="px-8 py-3.5 rounded-md text-base font-medium border border-border bg-secondary text-secondary-foreground hover:bg-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            type="button"
             onClick={() => navigate({ to: '/dashboard/publish' })}
           >
             {t('home.publishSkill')}

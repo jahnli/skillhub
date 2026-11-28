@@ -48,9 +48,9 @@ export function SuiteMemberTable({ suite, returnTo, management = false, onEdit }
           const identity = (
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={cn('truncate font-medium', navigable && 'text-blue-700 dark:text-blue-300')} title={memberName}>{memberName}</span>
+                <span className={cn('truncate font-medium', navigable && 'text-primary')} title={memberName}>{memberName}</span>
                 {member.entry ? (
-                  <span className="rounded-md border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-300">
+                  <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
                     {t('suite.entrySkill')}
                   </span>
                 ) : null}
@@ -98,7 +98,7 @@ export function SuiteMemberTable({ suite, returnTo, management = false, onEdit }
                     to="/space/$namespace/$slug"
                     params={{ namespace: member.namespace, slug: member.slug }}
                     search={{ returnTo, version: member.version }}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary hover:underline"
                   >
                     {t('suite.viewPinnedVersion')}
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />

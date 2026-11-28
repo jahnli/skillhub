@@ -36,13 +36,13 @@ const DialogContent = React.forwardRef<
       ref={ref}
       translate="no"
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100vh-2rem)] w-[min(calc(100vw-2rem),30rem)] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-2xl border border-border/40 bg-card text-card-foreground p-6 shadow-[0_20px_60px_-12px_rgb(0_0_0/0.30),0_0_0_1px_rgb(0_0_0/0.04)]',
+        'fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100vh-2rem)] w-[min(calc(100vw-2rem),30rem)] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-lg border border-border/40 bg-popover text-popover-foreground p-6 shadow-[0_20px_60px_-12px_rgb(0_0_0/0.30),0_0_0_1px_rgb(0_0_0/0.04)]',
         className
       )}
       {...props}
     >
       {children}
-      {!hideClose ? <DialogPrimitive.Close data-analytics-id={closeAnalyticsId} className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground/60 transition-all duration-150 hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:outline-none disabled:pointer-events-none">
+      {!hideClose ? <DialogPrimitive.Close data-analytics-id={closeAnalyticsId} className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground/60 transition-all duration-150 hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:outline-none disabled:pointer-events-none">
         <span className="sr-only">Close</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"

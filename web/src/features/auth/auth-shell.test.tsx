@@ -12,7 +12,7 @@ describe('AuthShell', () => {
   it('renders theme-aware product content beside the form', () => {
     const html = renderToStaticMarkup(<AuthShell><div>Login form</div></AuthShell>)
 
-    expect(html).toContain('dark:bg-slate-950')
+    expect(html).toContain('bg-muted text-foreground')
     expect(html).toContain('sticky top-0 hidden h-svh')
     expect(html).toContain('authShell.heroTitle')
     expect(html).toContain('authShell.shortTagline')

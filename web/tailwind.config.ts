@@ -12,11 +12,15 @@ const config: Config = {
         mono: ['var(--font-mono)'],
       },
       borderRadius: {
+        DEFAULT: 'var(--radius-sm)',
         lg: 'var(--radius)',
-        md: 'var(--radius)',
-        sm: 'calc(var(--radius) - 2px)',
-        xl: 'calc(var(--radius) + 4px)',
-        '2xl': 'calc(var(--radius) + 8px)',
+        md: 'var(--radius-md)',
+        sm: 'var(--radius-sm)',
+        // Existing surface classes share one product radius across pages.
+        xl: 'var(--radius)',
+        '2xl': 'var(--radius)',
+        '3xl': 'var(--radius)',
+        full: 'var(--radius-full)',
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -68,8 +72,8 @@ const config: Config = {
       boxShadow: {
         glow: '0 0 20px -5px hsl(var(--primary) / 0.3)',
         'glow-lg': '0 0 40px -10px hsl(var(--primary) / 0.25)',
-        'card': '0 4px 24px -4px hsl(0 0% 0% / 0.15)',
-        'card-hover': '0 20px 40px -12px hsl(var(--primary) / 0.1), 0 8px 16px -8px hsl(0 0% 0% / 0.2)',
+        'card': 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
       },
       animation: {
         'fade-up': 'fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',

@@ -42,7 +42,7 @@ function versionStatusTone(status: string) {
     case 'REJECTED':
       return 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300'
     default:
-      return 'border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-300'
+      return 'border-primary/20 bg-primary/10 text-primary'
   }
 }
 
@@ -175,7 +175,7 @@ function ExpandedVersion({
   const changes = detail ? compareMembers(detail.members, previous?.members ?? []) : []
 
   return (
-    <div className="border-t border-blue-500/10 bg-blue-500/[0.025] px-3 py-3">
+    <div className="border-t border-primary/10 bg-primary/[0.025] px-3 py-3">
       {isLoading || !detail ? (
         <div className="h-20 animate-shimmer rounded-md" aria-label={t('suite.loadingVersionDetails')} />
       ) : (
@@ -222,7 +222,7 @@ function ExpandedVersion({
                           to="/space/$namespace/$slug"
                           params={{ namespace: member.namespace, slug: member.slug }}
                           search={{ returnTo, version: member.version }}
-                          className="truncate font-mono text-blue-700 hover:text-blue-800 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
+                          className="truncate font-mono text-primary hover:text-primary hover:underline"
                         >
                           @{member.namespace}/{member.slug}
                         </Link>
@@ -231,7 +231,7 @@ function ExpandedVersion({
                       <span>{member.entry ? t('suite.entrySkill') : t('suite.management.memberRole')}</span>
                       <span className={cn(
                         kind === 'ADDED' && 'text-emerald-700 dark:text-emerald-300',
-                        kind === 'UPDATED' && 'text-blue-700 dark:text-blue-300',
+                        kind === 'UPDATED' && 'text-primary',
                         kind === 'REMOVED' && 'text-red-700 dark:text-red-300',
                       )}>
                         {t(`suite.memberChangeKinds.${kind}`, { version: prior })}

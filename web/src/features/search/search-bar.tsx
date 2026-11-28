@@ -79,7 +79,7 @@ export function SearchBar({ defaultValue = '', value, placeholder, isSearching =
           </button>
         ) : null}
       </div>
-      <Button type="submit" size={isMarket ? 'lg' : 'default'} className={cn('rounded-md', isMarket ? 'h-8 min-w-[4.5rem] px-3 sm:h-9 sm:min-w-24' : 'px-5 min-w-24')} disabled={isSearching}>
+      <Button type="submit" size={isMarket ? 'lg' : 'default'} className={cn(isMarket ? 'h-8 min-w-[4.5rem] px-3 sm:h-9 sm:min-w-24' : 'px-5 min-w-24')} disabled={isSearching}>
         {isSearching && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />}
         {t('searchBar.button')}
       </Button>

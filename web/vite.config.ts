@@ -59,7 +59,12 @@ function registryGuidePlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const backendTarget = loadEnv(mode, __dirname, 'SKILLHUB_DEV_').SKILLHUB_DEV_API_TARGET ?? 'http://localhost:8080'
+  const devEnv = loadEnv(mode, __dirname, 'SKILLHUB_DEV_')
+  const backendTarget = devEnv.SKILLHUB_DEV_API_TARGET ?? 'http://localhost:8080'
+  const webPort = Number(devEnv.SKILLHUB_DEV_WEB_PORT || '3000')
+  if (!Number.isInteger(webPort) || webPort < 1 || webPort > 65535) {
+    throw new Error('SKILLHUB_DEV_WEB_PORT must be an integer between 1 and 65535')
+  }
 
   return {
     base: basePath,
@@ -84,7 +89,8 @@ export default defineConfig(({ mode }) => {
       hookTimeout: 30000,
     },
     server: {
-      port: 3000,
+      port: webPort,
+      strictPort: true,
       watch: {
         usePolling: true,
         interval: 150,
@@ -105,7 +111,7 @@ export default defineConfig(({ mode }) => {
         },
         '/login/oauth2': {
           target: backendTarget,
-          // Preserve the browser-facing localhost:3000 host so Spring's
+          // Preserve the browser-facing host and port so Spring's
           // post-login redirect does not send the SPA to the backend port.
           changeOrigin: false,
         },
