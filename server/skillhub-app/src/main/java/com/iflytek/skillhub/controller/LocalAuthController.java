@@ -13,7 +13,6 @@ import com.iflytek.skillhub.dto.ChangePasswordRequest;
 import com.iflytek.skillhub.dto.LocalLoginRequest;
 import com.iflytek.skillhub.dto.LocalAuthCapabilitiesResponse;
 import com.iflytek.skillhub.dto.PasswordResetConfirmRequest;
-import com.iflytek.skillhub.dto.PasswordResetRequestDto;
 import com.iflytek.skillhub.exception.UnauthorizedException;
 import com.iflytek.skillhub.metrics.SkillHubMetrics;
 import com.iflytek.skillhub.ratelimit.RateLimit;
@@ -102,13 +101,6 @@ public class LocalAuthController extends BaseApiController {
         }
         localAuthService.changePassword(principal.userId(), request.currentPassword(), request.newPassword());
         return ok("response.success.updated", null);
-    }
-
-    @PostMapping("/password-reset/request")
-    @RateLimit(category = "auth-password-reset-request", authenticated = 8, anonymous = 5, windowSeconds = 300)
-    public ApiResponse<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequestDto request) {
-        passwordResetService.requestPasswordReset(request.email());
-        return ok("response.auth.password.reset.requested", null);
     }
 
     @PostMapping("/password-reset/confirm")

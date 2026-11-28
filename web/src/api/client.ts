@@ -4,7 +4,6 @@ import type { components, paths } from './generated/schema'
 import type {
   ChangePasswordRequest,
   PasswordResetConfirmRequest,
-  PasswordResetRequest,
   ApiToken,
   CreateTokenRequest,
   CreateTokenResponse,
@@ -800,16 +799,6 @@ export const authApi = {
 
   async changePassword(request: ChangePasswordRequest): Promise<void> {
     await fetchJson<void>('/api/v1/auth/local/change-password', {
-      method: 'POST',
-      headers: await ensureCsrfHeaders({
-        'Content-Type': 'application/json',
-      }),
-      body: JSON.stringify(request),
-    })
-  },
-
-  async requestPasswordReset(request: PasswordResetRequest): Promise<void> {
-    await fetchJson<void>('/api/v1/auth/local/password-reset/request', {
       method: 'POST',
       headers: await ensureCsrfHeaders({
         'Content-Type': 'application/json',

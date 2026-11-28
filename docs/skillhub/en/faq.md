@@ -81,11 +81,11 @@ A: Inspect the login and subsequent identity requests in browser developer tools
 
 ## Q: How do I change the admin password? Why don't my config changes take effect?
 
-A: `BOOTSTRAP_ADMIN_PASSWORD` initializes an account. `BootstrapAdminInitializer` preserves existing credentials, so changing this variable or recreating containers does not reset an existing password. Use the instance password-change/reset flow and configure SMTP for email verification. Do not delete users or database contents to reinitialize credentials.
+A: `BOOTSTRAP_ADMIN_PASSWORD` initializes an account. `BootstrapAdminInitializer` preserves existing credentials, so changing this variable or recreating containers does not reset an existing password. Use security settings if you know the current password, or ask an administrator to initiate an email reset. Do not delete users or database contents to reinitialize credentials.
 
 ## Q: Is an email verification code required to change / reset a password?
 
-A: The web password-reset flow uses email verification; the authenticated change-password endpoint uses the current password instead. Email reset requires [SMTP configuration](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md). Bootstrap environment variables do not reset existing passwords.
+A: An administrator initiates the reset and the account holder uses the emailed code; the authenticated change-password endpoint uses the current password instead. Email reset requires [SMTP configuration](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md). Bootstrap environment variables do not reset existing passwords.
 
 ## Q: Can a skill have a Chinese name?
 

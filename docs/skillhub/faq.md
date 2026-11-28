@@ -81,11 +81,11 @@ A: 先在浏览器网络面板检查登录请求及后续身份请求的状态�
 
 ## Q: 如何修改 admin 密码？修改配置后不生效？
 
-A: `BOOTSTRAP_ADMIN_PASSWORD` 用于初始化账号。`BootstrapAdminInitializer` 在本地凭证已存在时保留原密码，因此修改环境变量或重建容器不会重置已有账号密码。使用实例提供的修改/找回密码流程；邮件验证码需要正确配置 SMTP。不要删除用户或数据库重新初始化。
+A: `BOOTSTRAP_ADMIN_PASSWORD` 用于初始化账号。`BootstrapAdminInitializer` 在本地凭证已存在时保留原密码，因此修改环境变量或重建容器不会重置已有账号密码。知道原密码时可在安全设置中修改，忘记密码时请联系管理员发起重置；邮件验证码需要正确配置 SMTP。不要删除用户或数据库重新初始化。
 
 ## Q: 修改 / 找回密码必须使用邮箱验证码吗？
 
-A: 网页找回密码使用邮箱验证码；已登录且知道原密码的修改接口不使用该验证码。找回流程需先配置 [SMTP](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md)。修改 bootstrap 环境变量不能重置已经初始化的密码。
+A: 管理员发起重置后，用户使用邮箱验证码设置新密码；已登录且知道原密码的修改接口不使用该验证码。找回流程需先配置 [SMTP](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md)。修改 bootstrap 环境变量不能重置已经初始化的密码。
 
 ## Q: skill 可以起中文名吗？
 

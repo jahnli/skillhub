@@ -106,10 +106,6 @@ export interface ChangePasswordRequest {
   newPassword: string
 }
 
-export interface PasswordResetRequest {
-  email: string
-}
-
 export interface PasswordResetConfirmRequest {
   email: string
   code: string

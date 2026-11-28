@@ -77,17 +77,6 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void disabledPasswordLoginBlocksResetBeforeEmailLookup() {
-        doThrow(new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.login.disabled"))
-                .when(authSettings).requirePasswordLogin();
-
-        assertThatThrownBy(() -> service.requestPasswordReset("alice@example.com"))
-                .isInstanceOf(AuthFlowException.class)
-                .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
-        verifyNoInteractions(userAccountRepository, resetRequestRepository, mailSender);
-    }
-
-    @Test
     void disabledPasswordLoginStopsResetConfirmationBeforeCodeLookup() {
         doThrow(new AuthFlowException(HttpStatus.FORBIDDEN, "error.auth.local.login.disabled"))
                 .when(authSettings).requirePasswordLogin();
@@ -110,9 +99,9 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void requestPasswordReset_withEligibleEmail_savesRequestAndSendsEmail() {
+    void adminTriggerPasswordReset_savesAdminRequestAndSendsEmail() {
         UserAccount user = new UserAccount("usr_1", "alice", "alice@example.com", null);
-        given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.of(user));
+        given(userAccountRepository.findById("usr_1")).willReturn(Optional.of(user));
         given(credentialRepository.findByUserId("usr_1")).willReturn(
                 Optional.of(new LocalCredential("usr_1", "alice", "encoded"))
         );
@@ -121,49 +110,12 @@ class PasswordResetServiceTest {
         ).willReturn(List.of());
         given(passwordEncoder.encode(anyString())).willReturn("encoded-value");
 
-        service.requestPasswordReset("alice@example.com");
+        service.adminTriggerPasswordReset("usr_1", "admin_1");
 
-        verify(resetRequestRepository).save(any(PasswordResetRequest.class));
+        ArgumentCaptor<PasswordResetRequest> saved = ArgumentCaptor.forClass(PasswordResetRequest.class);
+        verify(resetRequestRepository).save(saved.capture());
+        assertThat(saved.getValue().isRequestedByAdmin()).isTrue();
         verify(mailSender).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    void requestPasswordReset_withUnknownEmail_doesNothing() {
-        given(userAccountRepository.findByEmailIgnoreCase("ghost@example.com")).willReturn(Optional.empty());
-
-        service.requestPasswordReset("ghost@example.com");
-
-        verify(resetRequestRepository, never()).save(any(PasswordResetRequest.class));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    void requestPasswordReset_withInvalidEmail_throwsBadRequest() {
-        assertThatThrownBy(() -> service.requestPasswordReset("alice"))
-                .isInstanceOf(AuthFlowException.class)
-                .extracting("status")
-                .isEqualTo(HttpStatus.BAD_REQUEST);
-
-        verifyNoInteractions(userAccountRepository, resetRequestRepository, mailSender);
-    }
-
-    @Test
-    void requestPasswordReset_emailFailure_doesNotThrowForAnonymousFlow() {
-        UserAccount user = new UserAccount("usr_1", "alice", "alice@example.com", null);
-        given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.of(user));
-        given(credentialRepository.findByUserId("usr_1")).willReturn(
-                Optional.of(new LocalCredential("usr_1", "alice", "encoded"))
-        );
-        given(resetRequestRepository.findByUserIdAndConsumedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(
-                anyString(), any(Instant.class))
-        ).willReturn(List.of());
-        given(passwordEncoder.encode(anyString())).willReturn("encoded-value");
-
-        org.mockito.Mockito.doThrow(new RuntimeException("smtp down")).when(mailSender).send(any(SimpleMailMessage.class));
-
-        service.requestPasswordReset("alice@example.com");
-
-        verify(resetRequestRepository).save(any(PasswordResetRequest.class));
     }
 
     @Test
@@ -185,8 +137,8 @@ class PasswordResetServiceTest {
                 "alice@example.com",
                 "encoded-code",
                 Instant.now().plus(Duration.ofMinutes(5)),
-                false,
-                null
+                true,
+                "admin_1"
         );
 
         given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.of(user));
@@ -211,6 +163,20 @@ class PasswordResetServiceTest {
     }
 
     @Test
+    void confirmPasswordReset_rejectsPreviouslyIssuedSelfServiceCode() {
+        UserAccount user = new UserAccount("usr_1", "alice", "alice@example.com", null);
+        PasswordResetRequest request = new PasswordResetRequest("usr_1", "alice@example.com",
+                "encoded-code", Instant.now().plusSeconds(60), false, null);
+        given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.of(user));
+        given(resetRequestRepository.findByUserIdAndConsumedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(
+                anyString(), any(Instant.class))).willReturn(List.of(request));
+
+        assertThatThrownBy(() -> service.confirmPasswordReset("alice@example.com", "123456", "Abcd123!"))
+                .isInstanceOf(AuthFlowException.class).extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(passwordEncoder, credentialRepository);
+    }
+
+    @Test
     void confirmPasswordReset_withInvalidCode_throwsBadRequest() {
         UserAccount user = new UserAccount("usr_1", "alice", "alice@example.com", null);
         LocalCredential credential = new LocalCredential("usr_1", "alice", "old-password");
@@ -219,8 +185,8 @@ class PasswordResetServiceTest {
                 "alice@example.com",
                 "encoded-code",
                 Instant.now().plus(Duration.ofMinutes(5)),
-                false,
-                null
+                true,
+                "admin_1"
         );
 
         given(userAccountRepository.findByEmailIgnoreCase("alice@example.com")).willReturn(Optional.of(user));

@@ -265,31 +265,15 @@ class LocalAuthControllerTest {
     }
 
     @Test
-    void requestPasswordReset_returnsGenericSuccessEnvelope() throws Exception {
+    void removedSelfServiceResetEndpointCannotIssueACode() throws Exception {
         mockMvc.perform(post("/api/v1/auth/local/password-reset/request")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"email":"alice@example.com"}
                     """))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value(0));
-
-        verify(passwordResetService).requestPasswordReset("alice@example.com");
-    }
-
-    @Test
-    void requestPasswordReset_rejectsInvalidEmailFormat() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/local/password-reset/request")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"email":"alice"}
-                    """))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value(400));
-
-        verify(passwordResetService, never()).requestPasswordReset("alice");
+                .andExpect(status().isNotFound());
+        org.mockito.Mockito.verifyNoInteractions(passwordResetService);
     }
 
     @Test

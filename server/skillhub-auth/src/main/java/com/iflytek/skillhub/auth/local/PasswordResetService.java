@@ -64,39 +64,6 @@ public class PasswordResetService {
     }
 
     /**
-     * Anonymous/self-service reset request. Always silent on ineligible users to
-     * avoid account enumeration.
-     */
-    @Transactional
-    public void requestPasswordReset(String email) {
-        authSettings.requirePasswordLogin();
-        String normalizedEmail = normalizeEmail(email);
-        validateEmail(normalizedEmail);
-        Optional<UserAccount> userOpt = findEligibleUserByEmail(normalizedEmail);
-        if (userOpt.isEmpty()) {
-            log.debug("Password reset requested for ineligible email");
-            return;
-        }
-
-        UserAccount user = userOpt.get();
-        String code = generateVerificationCode();
-        Instant now = Instant.now();
-        Instant expiresAt = now.plus(properties.getCodeExpiry());
-
-        invalidatePendingRequests(user.getId(), now);
-        resetRequestRepository.save(new PasswordResetRequest(
-                user.getId(),
-                user.getEmail(),
-                passwordEncoder.encode(code),
-                expiresAt,
-                false,
-                null
-        ));
-
-        sendVerificationCodeEmail(user.getEmail(), code, false);
-    }
-
-    /**
      * Admin-triggered reset request for a specific user.
      */
     @Transactional
@@ -123,7 +90,7 @@ public class PasswordResetService {
                 adminUserId
         ));
 
-        sendVerificationCodeEmail(user.getEmail(), code, true);
+        sendVerificationCodeEmail(user.getEmail(), code);
     }
 
     /**
@@ -141,6 +108,7 @@ public class PasswordResetService {
                 .findByUserIdAndConsumedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(user.getId(), Instant.now());
 
         PasswordResetRequest matchedRequest = pendingRequests.stream()
+                .filter(PasswordResetRequest::isRequestedByAdmin)
                 .filter(request -> passwordEncoder.matches(code, request.getCodeHash()))
                 .findFirst()
                 .orElseThrow(() -> new AuthFlowException(HttpStatus.BAD_REQUEST, "error.auth.password.reset.invalid.code"));
@@ -171,11 +139,6 @@ public class PasswordResetService {
             request.markConsumed(now);
             resetRequestRepository.save(request);
         }
-    }
-
-    private Optional<UserAccount> findEligibleUserByEmail(String normalizedEmail) {
-        return findUserByEmail(normalizedEmail)
-                .filter(this::isEligibleForReset);
     }
 
     private Optional<UserAccount> findUserByEmail(String normalizedEmail) {
@@ -220,7 +183,7 @@ public class PasswordResetService {
         return String.format("%0" + VERIFICATION_CODE_DIGITS + "d", code);
     }
 
-    private void sendVerificationCodeEmail(String email, String code, boolean failOnError) {
+    private void sendVerificationCodeEmail(String email, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(resolveFromAddress());
         message.setTo(email);
@@ -230,11 +193,8 @@ public class PasswordResetService {
             mailSender.send(message);
             log.info("Password reset verification code sent to {}", email);
         } catch (Exception ex) {
-            if (failOnError) {
-                log.error("Failed to send password reset verification code to {}", email, ex);
-                throw new AuthFlowException(HttpStatus.INTERNAL_SERVER_ERROR, "error.auth.password.reset.email.failed");
-            }
-            log.warn("Failed to send password reset verification code to {}", email, ex);
+            log.error("Failed to send password reset verification code to {}", email, ex);
+            throw new AuthFlowException(HttpStatus.INTERNAL_SERVER_ERROR, "error.auth.password.reset.email.failed");
         }
     }
 
@@ -248,7 +208,7 @@ public class PasswordResetService {
 
     private String buildVerificationCodeBody(String code) {
         long expiryMinutes = Math.max(1L, properties.getCodeExpiry().toMinutes());
-        return "Your SkillHub password reset verification code is: " + code
+        return "Your administrator initiated a SkillHub password reset. Enter this code at /reset-password on your SkillHub site: " + code
                 + "\n\nThis code expires in " + expiryMinutes + " minutes."
                 + "\n\nIf you did not request a password reset, please ignore this email.";
     }

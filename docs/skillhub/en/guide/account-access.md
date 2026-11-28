@@ -55,7 +55,7 @@ skillhub logout --registry https://skillhub.example.com
 
 ## Password reset versus password change
 
-For a forgotten password, follow the login page to `/reset-password`, request a code for the account email, and submit the email, code, and new password. This page depends on instance email configuration. A successful request response does not guarantee email delivery or prove that an address is registered.
+If you forget your local account password, contact an administrator. After they initiate the reset, open `/reset-password` on your instance and enter your account email, the code from your email, and a new password.
 
 The separate `/api/v1/auth/local/change-password` endpoint requires the current authenticated identity and current password. It is not the email-code reset flow; do not assume every password change requires email verification. Manage an external identity provider's password through that provider.
 
@@ -68,7 +68,7 @@ The separate `/api/v1/auth/local/change-password` endpoint requires the current 
 | Website signed in but CLI unauthenticated | Confirm the registry, then CLI login and `whoami`; browser cookies are not CLI tokens |
 | CLI uses the wrong account after login | Check command-line token, `SKILLHUB_TOKEN`, and stored per-registry credentials |
 | Token cannot call an endpoint | Check expiry/revocation, account/resource permissions, and token scope; retain the public error and `requestId` |
-| Reset email not received | Check the email address, spam folder, instance SMTP configuration, and logs; do not repeatedly request codes to bypass throttling |
+| Reset email not received | Confirm an administrator initiated the reset, then check the account email, spam folder, and instance SMTP configuration |
 | Login returns to the login page | Inspect subsequent identity requests, cookies, proxy, and session configuration; do not clear the database |
 
 When requesting help, provide the instance version, entry point, public error, and `requestId`. Do not share full tokens, verification codes, passwords, or cookies.

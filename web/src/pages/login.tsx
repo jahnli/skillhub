@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Building2, MoreHorizontal, LogIn, Eye, EyeOff } from 'lucide-react'
@@ -143,12 +143,7 @@ export function LoginPage() {
                 ) : null}
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
-                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-muted-foreground hover:text-primary hover:underline">
-                    {t('login.forgotPassword')}
-                  </Link>
-                </div>
+                <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
                 <div className="relative">
                   <Input
                     id="password"

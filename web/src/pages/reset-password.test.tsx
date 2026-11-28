@@ -18,7 +18,6 @@ vi.mock('react-i18next', async () => {
 
 vi.mock('@/api/client', () => ({
   authApi: {
-    requestPasswordReset: vi.fn(),
     confirmPasswordReset: vi.fn(),
   },
 }))
@@ -54,14 +53,14 @@ describe('ResetPasswordPage', () => {
   it('renders reset-password title and submit action', () => {
     const html = renderToStaticMarkup(<ResetPasswordPage />)
     expect(html).toContain('resetPassword.title')
-    expect(html).toContain('resetPassword.sendCode')
+    expect(html).not.toContain('resetPassword.sendCode')
     expect(html).toContain('resetPassword.submit')
   })
 
   it('hides reset actions when password login is disabled', () => {
     capabilities.passwordLoginEnabled = false
     const html = renderToStaticMarkup(<ResetPasswordPage />)
-    expect(html).not.toContain('resetPassword.sendCode')
+    expect(html).not.toContain('resetPassword.submit')
     expect(html).toContain('systemConfig.passwordDisabled')
     capabilities.passwordLoginEnabled = true
   })

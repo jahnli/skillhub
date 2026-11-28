@@ -197,6 +197,7 @@ describe('LoginPage', () => {
     expect(screen.getByText('session bootstrap').closest('[hidden]')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'login.useOtherMethods' }))
     expect(screen.getByLabelText('login.password')).toBeTruthy()
+    expect(screen.queryByText('login.forgotPassword')).toBeNull()
     expect(screen.getByText('session bootstrap').closest('[hidden]')).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'login.groupAccount' }))
     expect(screen.getByText('session bootstrap').closest('[hidden]')).toBeNull()

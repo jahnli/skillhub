@@ -18,36 +18,9 @@ export function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSendingCode, setIsSendingCode] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [codeSentMessage, setCodeSentMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
-
-  async function handleSendCode() {
-    if (!capabilities?.passwordLoginEnabled) return
-    const normalizedEmail = email.trim().toLowerCase()
-    if (!normalizedEmail) {
-      setErrorMessage(t('resetPassword.emailRequired'))
-      return
-    }
-    if (!emailPattern.test(normalizedEmail)) {
-      setErrorMessage(t('resetPassword.emailInvalid'))
-      return
-    }
-
-    setIsSendingCode(true)
-    setErrorMessage(null)
-    setCodeSentMessage(null)
-    try {
-      await authApi.requestPasswordReset({ email: normalizedEmail })
-      setCodeSentMessage(t('resetPassword.codeSentMessage'))
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('resetPassword.genericError'))
-    } finally {
-      setIsSendingCode(false)
-    }
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -116,26 +89,15 @@ export function ResetPasswordPage() {
                 <label className="text-sm font-medium" htmlFor="reset-password-email">
                   {t('resetPassword.email')}
                 </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    id="reset-password-email"
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder={t('resetPassword.emailPlaceholder')}
-                    autoComplete="email"
-                    required
-                  />
-                  <Button data-analytics-id="auth.password.code.request"
-                    className="sm:w-auto"
-                    disabled={isSendingCode || isSubmitting}
-                    type="button"
-                    variant="outline"
-                    onClick={handleSendCode}
-                  >
-                    {isSendingCode ? t('resetPassword.sendingCode') : t('resetPassword.sendCode')}
-                  </Button>
-                </div>
+                <Input
+                  id="reset-password-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder={t('resetPassword.emailPlaceholder')}
+                  autoComplete="email"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="reset-password-code">
@@ -177,9 +139,6 @@ export function ResetPasswordPage() {
               </div>
               {errorMessage ? (
                 <p className="text-sm text-red-600">{errorMessage}</p>
-              ) : null}
-              {codeSentMessage ? (
-                <p className="text-sm text-emerald-700">{codeSentMessage}</p>
               ) : null}
               <Button className="w-full" disabled={isSubmitting} type="submit">
                 {isSubmitting ? t('resetPassword.submitting') : t('resetPassword.submit')}
