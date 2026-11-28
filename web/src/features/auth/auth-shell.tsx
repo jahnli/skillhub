@@ -1,5 +1,4 @@
 import type React from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSitePresentation } from '@/shared/hooks/use-site-presentation'
 import { BrandMark } from '@/shared/components/brand-mark'
@@ -19,23 +18,8 @@ export function AuthShell({ children, className }: AuthShellProps) {
 
   return (
     <section className={cn('relative w-full', className)}>
-      <a data-analytics-id="navigation.home.open"
-        href={withBasePath('/')}
-        className="absolute left-5 top-5 z-20 inline-flex items-center gap-2 text-sm font-medium text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:hidden"
-      >
-        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-        {t('authShell.backHome')}
-      </a>
       <div className="grid min-h-svh w-full bg-background xl:grid-cols-[53fr_47fr]">
         <aside className="sticky top-0 hidden h-svh overflow-hidden border-r border-border bg-muted text-foreground xl:block">
-          <a data-analytics-id="navigation.home.open"
-            href={withBasePath('/')}
-            className="absolute left-12 top-10 z-20 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring 2xl:left-16"
-          >
-            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-            {t('authShell.backHome')}
-          </a>
-
           <div className="relative z-10 px-12 pt-28 2xl:px-16">
             <div className="flex items-center gap-3">
               <BrandMark className="h-8 w-8" alt="" />
@@ -50,8 +34,6 @@ export function AuthShell({ children, className }: AuthShellProps) {
             <img src={withBasePath('/login-skill-art-light.png')} alt="" width="1484" height="1060" className="h-full w-full object-contain dark:hidden" />
             <img src={withBasePath('/login-skill-art-dark.png')} alt="" width="1484" height="1060" className="hidden h-full w-full object-contain dark:block" />
           </div>
-
-          <p className="absolute bottom-9 left-12 z-10 whitespace-pre-line text-[10px] font-medium uppercase leading-4 tracking-[0.28em] text-muted-foreground 2xl:left-16">{t('authShell.shortTagline')}</p>
         </aside>
 
         <div className="flex min-h-svh items-start justify-center px-5 pb-8 pt-20 sm:px-10 xl:px-12 xl:py-24">

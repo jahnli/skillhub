@@ -142,15 +142,13 @@ describe('LoginPage', () => {
     expect(html).toContain('login.register')
   })
 
-  it('renders a complete Korean agreement with working policy links', async () => {
+  it('omits the agreement and policy links from the login page', async () => {
     await koreanI18n.init({ lng: 'ko', resources: { ko: { translation: ko } } })
     authMethodsFixture.localize = true
     render(<I18nextProvider i18n={koreanI18n}><LoginPage /></I18nextProvider>)
-    const terms = screen.getByRole('link', { name: '이용약관' })
-    const privacy = screen.getByRole('link', { name: '개인정보처리방침' })
-    expect(terms.getAttribute('href')).toBe('/terms')
-    expect(privacy.getAttribute('href')).toBe('/privacy')
-    expect(terms.parentElement?.textContent).toBe('로그인하면 이용약관 및 개인정보처리방침에 동의하게 됩니다.')
+    expect(screen.queryByRole('link', { name: '이용약관' })).toBeNull()
+    expect(screen.queryByRole('link', { name: '개인정보처리방침' })).toBeNull()
+    expect(screen.queryByText('로그인하면 이용약관 및 개인정보처리방침에 동의하게 됩니다.')).toBeNull()
   })
 
   it('shows a translated disabled-account reason instead of a missing key', async () => {

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react'
 import { getSessionBootstrapRuntimeConfig } from '@/api/client'
 import { AuthShell } from '@/features/auth/auth-shell'
@@ -221,17 +221,6 @@ export function LoginPage() {
             {t('login.register')}
           </Link>
         </p> : null}
-
-        <p className="mt-auto text-center text-xs text-muted-foreground">
-          <Trans
-            t={t}
-            i18nKey="login.agreement"
-            components={{
-              terms: <Link data-analytics-id="navigation.terms.open" to="/terms" className="text-primary hover:underline" />,
-              privacy: <Link data-analytics-id="navigation.privacy.open" to="/privacy" className="text-primary hover:underline" />,
-            }}
-          />
-        </p>
       </div>
     </AuthShell>
   )
